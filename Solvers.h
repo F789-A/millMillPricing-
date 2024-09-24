@@ -2,47 +2,17 @@
 #include <vector>
 #include <scip/scip.h>
 #include <scip/scipdefplugins.h>
+#include "Instance.h"
 
-using table = std::vector<std::vector<float>>;
-using vector = std::vector<float>;
-using ivector = std::vector<int>;
-
-struct Instance
+class FollowerProblemSolver
 {
-	Instance(const table& costs, const vector& Budgets);
+public:
+	FollowerProblemSolver(const ivector& leaderPrices, const Instance& instance);
 
-	table costs;
-	vector budgets;
+private:
+	SCIP_RETCODE SolveProblem(const ivector& leaderPrices, const Instance& instance);
 
-	vector pUpperBound;
-
-	int facilityCount;
-	int clientsCount;
-};
-
-struct Answer
-{
-	vector prices;
+public:
 	float income;
-};
-
-
-class ProblemSolver
-{
-public:
-	ProblemSolver(const ivector& constraint, const Instance& instance, bool relax);
-
-	SCIP_RETCODE SolveProblem(const ivector& constraint, const Instance& instance, bool relax);
-	Answer answer;
-};
-
-class FirstVectorSolver
-{
-public:
-	FirstVectorSolver(const ivector& constraint, const Instance& instance);
-
-	SCIP_RETCODE SolveProblem(const ivector& constraint, const Instance& instance);
-
-	bool exist = true;
-	vector prices;
+	ivector prices;
 };

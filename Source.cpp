@@ -1,5 +1,5 @@
 #include <vector>
-#include <random> // TODO mt19937 is to fast?
+#include <random>
 #include <numeric>
 #include <map>
 #include <queue>
@@ -8,192 +8,157 @@
 #include <filesystem>
 #include <fstream>
 
-#include <scip/scip.h>
-#include <scip/scipdefplugins.h>
-
 #include "Solvers.h"
+#include "VndSolvers.h"
 
-struct Node
+int Solve(const ivector& leaderPrice, const ivector& followerPrice, const Instance& instance)
 {
-	ivector constraint;
-	float upper;
-	vector lowerSolution;
-	float lower;
-	bool leaf;
-};
-
-float Solve(const vector& price, const Instance& instance)
-{
-	float income = 0;
+	int income = 0;
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
-		float minFollowerCost = std::numeric_limits<float>::max();
-		for (int i = 0; i < instance.facilityCount; ++i)
+		int tmpIncome = 0;
+		int minLeaderCost = std::numeric_limits<int>::max();
+		for (int i = 0; i < instance.leaderFacilityCount; ++i)
 		{
-			float tmpCost = instance.costs[i][j] + price[i];
-			if (instance.budgets[j] - tmpCost >= 0 && minFollowerCost >= tmpCost)
+			int tmpMinLeaderCost = instance.costsLeader[i][j] + leaderPrice[i];
+			if (instance.budgets[j] - tmpMinLeaderCost >= 0 &&
+				minLeaderCost >= tmpMinLeaderCost &&
+				tmpIncome < leaderPrice[i])
 			{
-				minFollowerCost = tmpCost;
+				tmpIncome = leaderPrice[i];
+				minLeaderCost = tmpMinLeaderCost;
 			}
 		}
-
-		if (minFollowerCost < std::numeric_limits<float>::max())
+		int minFollowerCost = std::numeric_limits<int>::max();
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
 		{
-			income += minFollowerCost;
+			int tmpMinFollowerCost = instance.costsLeader[i][j] + followerPrice[i];
+			if (instance.budgets[j] - tmpMinFollowerCost >= 0 &&
+				minFollowerCost >= tmpMinFollowerCost)
+			{
+				minFollowerCost = tmpMinFollowerCost;
+			}
+		}
+		if (minLeaderCost < minFollowerCost)
+		{
+			income += tmpIncome;
 		}
 	}
-
 	return income;
 }
 
-vector getFirst(const ivector& constraint, const Instance& instance, bool& oExist) // TODO not polynominal
+ivector GetFirst(const Instance& instance, bool upper)
 {
-	FirstVectorSolver firstVectorSolver(constraint, instance);
-	oExist = firstVectorSolver.exist; // TODO remove (rewrite this)
-	return firstVectorSolver.prices;
+	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
+	for (auto& l : result)
+	{
+		l /= 2;
+	}
+	return result;
 }
 
-vector getRandomFromFlip(const vector& startPrice, const ivector& constraint, const Instance& instance)
+ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance, bool upper)
 {
 	static std::seed_seq seed_w({ 123123 });
 	static auto random_generator = std::mt19937(seed_w);
 	std::uniform_int_distribution<> distrib1(0, startPrice.size() - 1);
 
-	int followerFacility = distrib1(random_generator);
+	int facility = distrib1(random_generator);
 
-	float pBoundMin = 0.0;
-	float pBoundMax = instance.pUpperBound[followerFacility];
+	int pBoundMin = 0;
+	int pBoundMax = upper ? instance.pUpperBound[facility] : instance.qUpperBound[facility];
 
-	for (int j = 0; j < constraint.size(); ++j)
-	{
-		float minInRow = 0;
-		for (int i = 0; i < instance.facilityCount; ++i) // TODO cache this
-		{
-			if (i == followerFacility || instance.budgets[j] - startPrice[i] - instance.costs[i][j] < 0)
-			{
-				continue;
-			}
-			minInRow = std::min(minInRow, instance.budgets[j] - startPrice[i] - instance.costs[i][j]);
-		}
-
-		if (constraint[j] == followerFacility) // этот клиент обслуживаетс€ на этом предпри€тии
-		{
-			pBoundMin = std::max(pBoundMin, std::min(minInRow, instance.budgets[j] - instance.costs[followerFacility][j]));
-		}
-		else
-		{
-			pBoundMax = std::min(pBoundMax, std::min(minInRow, instance.budgets[j] - instance.costs[followerFacility][j]));
-		}
-	}
-
-	std::uniform_real_distribution<> distrib2(pBoundMin, pBoundMax);
-	vector result = startPrice;
-	result[followerFacility] = distrib2(random_generator);
+	std::uniform_int_distribution<> distrib2(pBoundMin, pBoundMax);
+	ivector result = startPrice;
+	result[facility] = distrib2(random_generator);
 
 	return result;
 }
 
-Answer VndProblem(const ivector& constraint, const Instance& instance, bool& oExist)
+ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance)
 {
-	const int iterCount = 100 * instance.facilityCount;
+	const int maxIterCount = 10 * instance.followerFacilityCount;
+	ivector followerPrices = GetFirst(instance, false);
+	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
-	vector prices = getFirst(constraint, instance, oExist);
-	if (!oExist)
+	while (true)
 	{
-		return {};
-	}
-	float maxIncome = Solve(prices, instance);
+		ivector followerRecordPrices = followerPrices;
+		int incomeRecord = maxIncome;
 
-	for (int i = 0; i < iterCount; ++i)
-	{
-		vector tmpPrices = getRandomFromFlip(prices, constraint, instance);
-		float income = Solve(tmpPrices, instance);
-		if (income > maxIncome)
+		for (int i = 0; i < maxIterCount; ++i)
 		{
-			prices = tmpPrices;
-			maxIncome = income;
-			i = -1;
+			ivector tmpFollowerPrices = GetRandomFromFlip(leaderPrices, instance, false);
+			int income = Solve(leaderPrices, tmpFollowerPrices, instance);
+			if (income > incomeRecord)
+			{
+				followerRecordPrices = tmpFollowerPrices;
+				incomeRecord = income;
+			}
+		}
+
+		if (incomeRecord > maxIncome)
+		{
+			followerPrices = followerRecordPrices;
+			maxIncome = incomeRecord;
+		}
+		else
+		{
+			break;
 		}
 	}
 
-	return { prices, maxIncome };
+	return followerPrices;
 }
 
-Answer RelaxProblem(const ivector& constraint, const Instance& instance)
+int VndUpperProblem(const Instance& instance)
 {
-	ProblemSolver relax(constraint, instance, true);
-	return relax.answer;
-}
+	const int maxIterCount = 10 * instance.leaderFacilityCount;
+	ivector leaderPrices = GetFirst(instance, true);
+	ivector followerPrices = VndLowerProblem(leaderPrices, instance);
+	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
-Answer SolveBaB(const Instance& instance)
-{
-	std::multimap<float, std::shared_ptr<Node>> tree;
-	std::queue<std::weak_ptr<Node>> nextNode;
-	std::shared_ptr<Node> best;
+	int iterCount = 0;
 
-	std::shared_ptr<Node> stNode = std::make_shared<Node>(); // TODO remove;
-
-	nextNode.push(stNode);
-
-	float maxLowerBound = std::numeric_limits<float>::min();
-
-	while (!nextNode.empty())
+	while (true) 
 	{
-		auto wNode = nextNode.front();
-		nextNode.pop();
-		if (wNode.expired())
+		++iterCount;
+		ivector leaderRecordPrices = leaderPrices;
+		ivector followerRecordPrices = followerPrices;
+		int incomeRecord = maxIncome;
+
+		for (int i = 0; i < maxIterCount; ++i)
 		{
-			continue;
+			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance, true);
+			ivector tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance);
+			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
+			if (income > incomeRecord)
+			{
+				leaderRecordPrices = tmpLeaderPrices;
+				followerRecordPrices = tmpFollowerPrices;
+				incomeRecord = income;
+			}
 		}
-		auto node = wNode.lock();
 
-		for (int i = 0; i < instance.facilityCount + 1; ++i)
+		if (incomeRecord > maxIncome)
 		{
-			ivector constraint = node->constraint;
-			constraint.push_back(i < instance.facilityCount ? i : std::numeric_limits<int>::max());
-
-			bool exist = true; // TODO rewrite
-			Answer solution = VndProblem(constraint, instance, exist);
-			if (!exist)
-			{
-				continue;  
-			}
-
-			float upperIncome = RelaxProblem(constraint, instance).income;
-			float lowerIncome = solution.income;
-
-			if (upperIncome == lowerIncome)
-			{
-				if (best->upper <= upperIncome)
-				{
-					best = std::shared_ptr<Node>(new Node{ constraint, upperIncome, solution.prices, lowerIncome });
-				}
-			}
-			else
-			{
-				if (upperIncome > maxLowerBound)
-				{
-					auto newNode = std::shared_ptr<Node>(new Node{constraint, upperIncome, solution.prices, lowerIncome});
-					tree.insert({ upperIncome, newNode });
-					nextNode.push(newNode);
-				}
-			}
-
-			maxLowerBound = std::max(maxLowerBound, lowerIncome);
-
-			auto lbIt = tree.lower_bound(lowerIncome);
-			auto it = tree.begin();
-			while (it != lbIt)
-			{
-				it = tree.erase(it);
-			}
+			leaderPrices = leaderRecordPrices;
+			followerPrices = followerRecordPrices;
+			maxIncome = incomeRecord;
+			std::cout << iterCount <<") Improvement: " << maxIncome << std::endl;
+		}
+		else
+		{
+			break;
 		}
 	}
 
-	return { best->lowerSolution, best->lower };
+	FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+
+	return Solve(leaderPrices, folllowerSolver.prices, instance);
 }
 
-Instance ReadInstance(const std::string& path)
+Instance ReadInstance(const std::string& path, float leaderPart, int clip)
 {
 	std::ifstream file(path);
 
@@ -205,22 +170,42 @@ Instance ReadInstance(const std::string& path)
 	file >> n;
 	file >> r;
 
-	table costs = table(m, vector(n));
-	for (int i = 0; i < m; ++i)
+	int M = std::min(clip, m);
+
+	int m1 = static_cast<int>(static_cast<float>(M) * leaderPart);
+	int m2 = M - m1;
+
+	table costsLeader = table(m1, ivector(n));
+	for (int i = 0; i < m1; ++i)
 	{
 		for (int j = 0; j < n; ++j)
 		{
-			file >> costs[i][j];
+			file >> costsLeader[i][j];
 		}
 	}
-
-	vector budgets = vector(n);
+	table costsFollower = table(m2, ivector(n));
+	for (int i = 0; i < m2; ++i)
+	{
+		for (int j = 0; j < n; ++j)
+		{
+			file >> costsFollower[i][j];
+		}
+	}
+	int f;
+	for (int i = 0; i < std::max(m - M, 0); ++i)
+	{
+		for (int j = 0; j < n; ++j)
+		{
+			file >> f;
+		}
+	}
+	ivector budgets = ivector(n);
 	for (int j = 0; j < n; ++j)
 	{
 		file >> budgets[j];
 	}
 
-	return Instance(costs, budgets);
+	return Instance(costsLeader, costsFollower, budgets);
 }
 
 int main()
@@ -228,15 +213,12 @@ int main()
 	std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		Instance instance = ReadInstance( entry.path().string());
+		std::cout << "Test file: " << entry.path() << std::endl;
+		Instance instance = ReadInstance( entry.path().string(), 0.5f, 10);
 
-		//ProblemSolver solver({}, instance, false);
-		//auto solverAnswer = solver.answer;
+		auto ourAnswer = VndUpperProblem(instance);
 
-		auto ourAnswer = SolveBaB(instance);
-
-		std::cout << entry.path() << std::endl;
-		//std::cout << solverAnswer.income << " " << ourAnswer.income << std::endl;
+		std::cout << "Result: " << ourAnswer << std::endl;
 	}
 
 	return 0;
