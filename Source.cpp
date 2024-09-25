@@ -111,11 +111,20 @@ ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance)
 	return followerPrices;
 }
 
-int VndUpperProblem(const Instance& instance)
+int VndUpperProblem(const Instance& instance, bool exactLower)
 {
 	const int maxIterCount = 10 * instance.leaderFacilityCount;
 	ivector leaderPrices = GetFirst(instance, true);
-	ivector followerPrices = VndLowerProblem(leaderPrices, instance);
+	ivector followerPrices;
+	if (exactLower)
+	{
+		FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		followerPrices = folllowerSolver.prices;
+	}
+	else
+	{
+		followerPrices = VndLowerProblem(leaderPrices, instance);
+	}
 	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
 	int iterCount = 0;
@@ -130,7 +139,16 @@ int VndUpperProblem(const Instance& instance)
 		for (int i = 0; i < maxIterCount; ++i)
 		{
 			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance, true);
-			ivector tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance);
+			ivector tmpFollowerPrices;
+			if (exactLower)
+			{
+				FollowerProblemSolver folllowerSolver(tmpLeaderPrices, instance);
+				tmpFollowerPrices = folllowerSolver.prices;
+			}
+			else
+			{
+				tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance);
+			}
 			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			if (income > incomeRecord)
 			{
@@ -153,9 +171,13 @@ int VndUpperProblem(const Instance& instance)
 		}
 	}
 
-	FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+	if (!exactLower)
+	{
+		FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		followerPrices = folllowerSolver.prices;
+	}
 
-	return Solve(leaderPrices, folllowerSolver.prices, instance);
+	return Solve(leaderPrices, followerPrices, instance);
 }
 
 Instance ReadInstance(const std::string& path, float leaderPart, int clip)
@@ -229,7 +251,7 @@ int main()
 		std::chrono::high_resolution_clock timer;
 		auto start = timer.now();
 
-		auto ourAnswer = VndUpperProblem(instance);
+		auto ourAnswer = VndUpperProblem(instance, true);
 
 		auto stop = timer.now();
 
