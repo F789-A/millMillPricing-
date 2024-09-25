@@ -13,7 +13,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	SCIP* scip = nullptr;
 	SCIP_CALL(SCIPcreate(&scip));
 	SCIP_CALL(SCIPincludeDefaultPlugins(scip)); //  include default plugins
-	//SCIPsetMessagehdlrQuiet(scip, true);
+	SCIPsetMessagehdlrQuiet(scip, true);
 
 	SCIP_CALL(SCIPcreateProbBasic(scip, "lower"));
 	SCIP_CALL(SCIPsetObjsense(scip, SCIP_OBJSENSE_MAXIMIZE));
@@ -98,7 +98,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	}
 
 	std::vector<SCIP_CONS*> constr6(instance.clientsCount, nullptr);
-	/*for (int j = 0; j < instance.clientsCount; ++j)
+	for (int j = 0; j < instance.clientsCount; ++j)
 	{
 		SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr6[j], "", 0, nullptr, nullptr, -SCIPinfinity(scip), 1.0));
 		for (int i = 0; i < instance.followerFacilityCount; ++i)
@@ -106,7 +106,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr6[j], x_ij[toIdx(i, j)], 1.0));
 		}
 		SCIP_CALL(SCIPaddCons(scip, constr6[j]));
-	}*/
+	}
 
 	ivector leaderBestOffer(instance.clientsCount, std::numeric_limits<int>::max());
 	for (int j = 0; j < instance.clientsCount; ++j)
@@ -121,7 +121,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	}
 
 	std::vector<SCIP_CONS*> constr7;
-	/*for (int j = 0; j < instance.clientsCount; ++j)
+	for (int j = 0; j < instance.clientsCount; ++j)
 	{
 		if (leaderBestOffer[j] == std::numeric_limits<int>::max())
 		{
@@ -134,7 +134,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr7.back(), z_ij[toIdx(i, j)], 1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr7.back()));
 		}
-	}*/
+	}
 
 	SCIP_CALL(SCIPsolve(scip));
 	SCIP_SOL* sol = nullptr;

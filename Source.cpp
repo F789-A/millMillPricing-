@@ -210,15 +210,38 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip)
 
 int main()
 {
+	std::ofstream out("C:/Workflow/Cpp/millMillPricing/result.txt");
 	std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
+
+	std::vector<std::string> testPaths;
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		std::cout << "Test file: " << entry.path() << std::endl;
-		Instance instance = ReadInstance( entry.path().string(), 0.5f, 10);
+		testPaths.push_back(entry.path().string());
+	}
+
+	for (const auto& inputFile : testPaths)
+	{
+
+		std::cout << "Test file: " << inputFile << std::endl;
+
+		Instance instance = ReadInstance(inputFile, 0.5f, 10);
+
+		std::chrono::high_resolution_clock timer;
+		auto start = timer.now();
 
 		auto ourAnswer = VndUpperProblem(instance);
 
+		auto stop = timer.now();
+
+		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000000.0f;
+
+
 		std::cout << "Result: " << ourAnswer << std::endl;
+		std::cout << "Time: " << deltaTime << std::endl;
+
+		out << "Test file: " << inputFile << std::endl;
+		out << "Result: " << ourAnswer << std::endl;
+		out << "Time: " << deltaTime << std::endl;
 	}
 
 	return 0;

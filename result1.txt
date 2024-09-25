@@ -1,0 +1,188 @@
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_01.txt
+1) Improvement 1308
+2) Improvement 1357
+3) Improvement 1382
+4) Improvement 1427
+Result 1369
+Time 135.761
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_02.txt
+1) Improvement 935
+2) Improvement 1377
+3) Improvement 1543
+4) Improvement 1606
+Result 1051
+Time 310.144
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_03.txt
+1) Improvement 980
+2) Improvement 1141
+3) Improvement 1289
+4) Improvement 1329
+5) Improvement 1338
+6) Improvement 1345
+7) Improvement 1353
+Result 884
+Time 89.0278
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_04.txt
+1) Improvement 1211
+2) Improvement 1263
+Result 955
+Time 85.8492
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_05.txt
+1) Improvement 654
+2) Improvement 953
+3) Improvement 1127
+4) Improvement 1223
+5) Improvement 1295
+6) Improvement 1376
+Result 1024
+Time 82.6107
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_06.txt
+1) Improvement 860
+2) Improvement 988
+3) Improvement 1098
+4) Improvement 1183
+5) Improvement 1223
+6) Improvement 1314
+7) Improvement 1350
+8) Improvement 1352
+9) Improvement 1362
+10) Improvement 1383
+11) Improvement 1489
+12) Improvement 1510
+Result 1510
+Time 40.4306
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_07.txt
+1) Improvement 861
+2) Improvement 1152
+3) Improvement 1307
+4) Improvement 1340
+5) Improvement 1382
+6) Improvement 1411
+7) Improvement 1415
+Result 859
+Time 67.3597
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_08.txt
+1) Improvement 1190
+2) Improvement 1253
+3) Improvement 1267
+4) Improvement 1321
+5) Improvement 1328
+6) Improvement 1345
+Result 977
+Time 59.5274
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_09.txt
+1) Improvement 800
+2) Improvement 930
+3) Improvement 1006
+4) Improvement 1081
+5) Improvement 1114
+6) Improvement 1186
+7) Improvement 1195
+Result 811
+Time 41.6288
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_100_10.txt
+1) Improvement 896
+2) Improvement 1286
+3) Improvement 1330
+4) Improvement 1340
+5) Improvement 1358
+6) Improvement 1365
+Result 1441
+Time 79.1277
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_01.txt
+1) Improvement 946
+2) Improvement 1186
+3) Improvement 1270
+4) Improvement 1300
+5) Improvement 1370
+6) Improvement 1391
+7) Improvement 1460
+8) Improvement 1465
+9) Improvement 1477
+10) Improvement 1482
+Result 222
+Time 91.6738
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_02.txt
+1) Improvement 824
+2) Improvement 1046
+3) Improvement 1322
+Result 523
+Time 110.554
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_03.txt
+1) Improvement 560
+2) Improvement 700
+3) Improvement 863
+4) Improvement 956
+5) Improvement 1047
+6) Improvement 1106
+7) Improvement 1171
+8) Improvement 1193
+9) Improvement 1272
+10) Improvement 1305
+Result 245
+Time 156.476
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_04.txt
+1) Improvement 583
+2) Improvement 664
+3) Improvement 700
+4) Improvement 754
+5) Improvement 772
+6) Improvement 778
+7) Improvement 809
+Result 759
+Time 29.6847
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_05.txt
+1) Improvement 1137
+2) Improvement 1444
+3) Improvement 1532
+4) Improvement 1624
+Result 1568
+Time 113.371
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_06.txt
+1) Improvement 703
+2) Improvement 881
+3) Improvement 1007
+4) Improvement 1060
+5) Improvement 1082
+6) Improvement 1111
+7) Improvement 1137
+8) Improvement 1155
+Result 1155
+Time 103.306
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_07.txt
+1) Improvement 572
+2) Improvement 878
+3) Improvement 1116
+4) Improvement 1452
+5) Improvement 1465
+6) Improvement 1475
+7) Improvement 1500
+Result 1500
+Time 58.9503
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_08.txt
+1) Improvement 947
+2) Improvement 1271
+3) Improvement 1371
+4) Improvement 1403
+5) Improvement 1407
+6) Improvement 1417
+Result 1417
+Time 32.3617
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_09.txt
+1) Improvement 966
+2) Improvement 1047
+3) Improvement 1177
+4) Improvement 1343
+5) Improvement 1396
+6) Improvement 1407
+7) Improvement 1464
+Result 957
+Time 49.2709
+Test file CWorkflowCppmillMillPricingexamplesFLPr_100_40_10.txt
+1) Improvement 1325
+2) Improvement 1436
+3) Improvement 1470
+4) Improvement 1476
+5) Improvement 1500
+Result 1438
+Time 103.369
