@@ -109,7 +109,8 @@ ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance, b
 ivector VndLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
 {
 	const int maxIterCount = 100 * instance.followerFacilityCount;
-	//ivector followerPrices = GetFirst(instance, false);
+	//ivector followerPrices = GetFirst(instance, false);]
+	ivector followerPrices = first;
 	int maxIncome = SolveLower(leaderPrices, followerPrices, instance);
 
 	int iterCount = 0;
@@ -149,30 +150,28 @@ ivector VndLowerProblem(const ivector& first, const ivector& leaderPrices, const
 
 int VndUpperProblem(const Instance& instance, bool exactLower)
 {
-	const int maxIterCount = 100 * instance.leaderFacilityCount;
-	ivector leaderPrices = GetFirst(instance, true);
-	int followerInterCount = 0;
+	const int maxIterCount = 1000 * instance.leaderFacilityCount;
+
+	int followerIterationCount = 0;
 	int followerVndCount = 0;
 	int followerIncome = 0;
-	ivector followerPrices;
-	if (exactLower)
-	{
-		//FollowerProblemSolver folllowerSolver(leaderPrices, instance);
-		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
-		followerPrices = folllowerSolver.prices;
-	}
-	else
-	{
-		++followerVndCount;
-		followerPrices = VndLowerProblem(leaderPrices, instance, followerInterCount, followerIncome);
-	}
+
+	ivector leaderPrices = GetFirst(instance, true);
+	
+	FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
+	ivector followerPrices = folllowerSolver.prices;
+
+	followerIncome = folllowerSolver.income;
 	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
 	int iterCount = 0;
-	
 	while (true) 
 	{
 		++iterCount;
+
+		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
+		followerPrices = folllowerSolver.prices;
+
 		ivector leaderRecordPrices = leaderPrices;
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
@@ -181,19 +180,10 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		for (int i = 0; i < maxIterCount; ++i)
 		{
 			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance, true);
-			ivector tmpFollowerPrices;
 			int followerIncomeTmp = 0;
-			if (exactLower)
-			{
-				//FollowerProblemSolver folllowerSolver(tmpLeaderPrices, instance);
-				FollowerCooperativeExactSolver folllowerSolver(tmpLeaderPrices, instance);
-				tmpFollowerPrices = folllowerSolver.prices;
-			}
-			else
-			{
-				++followerVndCount;
-				tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance, followerInterCount, followerIncomeTmp);
-			}
+			ivector tmpFollowerPrices = VndLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount, followerIncomeTmp);
+			++followerVndCount;
+
 			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			if (income > incomeRecord)
 			{
@@ -209,6 +199,7 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 			leaderPrices = leaderRecordPrices;
 			followerPrices = followerRecordPrices;
 			maxIncome = incomeRecord;
+			followerIncome = followerIncomeRecord;
 		}
 		else
 		{
@@ -216,18 +207,18 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		}
 	}
 
-	std::cout << "Expected follower income:" << followerIncome << " Iteration folower average count:" << (float)followerInterCount / followerVndCount << std::endl;
-	std::cout << "Expected leader income:" << maxIncome << " Iteration count:" << iterCount << std::endl;
+	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
+	followerPrices = followerSolver.prices;
+	int result = Solve(leaderPrices, followerPrices, instance);
 
-	if (!exactLower)
-	{
-		//FollowerProblemSolver folllowerSolver(leaderPrices, instance);
-		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
-		followerPrices = folllowerSolver.prices;
-		std::cout << "Exact solution for lower: " << folllowerSolver.income << std::endl;
-	}
+	std::cout << "Expected follower income: " << followerIncome 
+		<< "; Exact solution for lower: " << folllowerSolver.income 
+		<< "; Iteration follower average count: " << (float)followerIterationCount / followerVndCount << std::endl;
+	std::cout << "Expected leader income: " << maxIncome 
+		<< "; Exact leader income: " << result 
+		<< "; Iteration count: " << iterCount << std::endl;
 
-	return Solve(leaderPrices, followerPrices, instance);
+	return result;
 }
 
 Instance ReadInstance(const std::string& path, float leaderPart, int clip, int clipClients)
