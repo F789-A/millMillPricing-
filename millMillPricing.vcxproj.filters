@@ -24,7 +24,7 @@
     <ClCompile Include="Instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VndSolvers.cpp">
+    <ClCompile Include="FollowerCooperativeSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,7 +35,7 @@
     <ClInclude Include="Instance.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="VndSolvers.h">
+    <ClInclude Include="FollowerCooperativeSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,7 +8,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "Solvers.h"
+#include "FollowerExactSolver.h"
+#include "FollowerCooperativeExactSolver.h"
 #include "VndSolvers.h"
 
 int Solve(const ivector& leaderPrice, const ivector& followerPrice, const Instance& instance)
@@ -75,14 +76,17 @@ ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance, b
 	return result;
 }
 
-ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance)
+ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
 {
-	const int maxIterCount = 10 * instance.followerFacilityCount;
+	const int maxIterCount = 100 * instance.followerFacilityCount;
 	ivector followerPrices = GetFirst(instance, false);
 	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
+	int iterCount = 0;
+
 	while (true)
 	{
+		++iterCount;
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
 
@@ -108,46 +112,57 @@ ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance)
 		}
 	}
 
+	income = maxIncome;
+	iterrCount += iterCount;
 	return followerPrices;
 }
 
 int VndUpperProblem(const Instance& instance, bool exactLower)
 {
-	const int maxIterCount = 10 * instance.leaderFacilityCount;
+	const int maxIterCount = 100 * instance.leaderFacilityCount;
 	ivector leaderPrices = GetFirst(instance, true);
+	int followerInterCount = 0;
+	int followerVndCount = 0;
+	int followerIncome = 0;
 	ivector followerPrices;
 	if (exactLower)
 	{
-		FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		//FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
 		followerPrices = folllowerSolver.prices;
 	}
 	else
 	{
-		followerPrices = VndLowerProblem(leaderPrices, instance);
+		++followerVndCount;
+		followerPrices = VndLowerProblem(leaderPrices, instance, followerInterCount, followerIncome);
 	}
 	int maxIncome = Solve(leaderPrices, followerPrices, instance);
 
 	int iterCount = 0;
-
+	
 	while (true) 
 	{
 		++iterCount;
 		ivector leaderRecordPrices = leaderPrices;
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
+		int followerIncomeRecord = followerIncome;
 
 		for (int i = 0; i < maxIterCount; ++i)
 		{
 			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance, true);
 			ivector tmpFollowerPrices;
+			int followerIncomeTmp = 0;
 			if (exactLower)
 			{
-				FollowerProblemSolver folllowerSolver(tmpLeaderPrices, instance);
+				//FollowerProblemSolver folllowerSolver(tmpLeaderPrices, instance);
+				FollowerCooperativeExactSolver folllowerSolver(tmpLeaderPrices, instance);
 				tmpFollowerPrices = folllowerSolver.prices;
 			}
 			else
 			{
-				tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance);
+				++followerVndCount;
+				tmpFollowerPrices = VndLowerProblem(tmpLeaderPrices, instance, followerInterCount, followerIncomeTmp);
 			}
 			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			if (income > incomeRecord)
@@ -155,6 +170,7 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 				leaderRecordPrices = tmpLeaderPrices;
 				followerRecordPrices = tmpFollowerPrices;
 				incomeRecord = income;
+				followerIncomeRecord = followerIncomeTmp;
 			}
 		}
 
@@ -163,7 +179,6 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 			leaderPrices = leaderRecordPrices;
 			followerPrices = followerRecordPrices;
 			maxIncome = incomeRecord;
-			std::cout << iterCount <<") Improvement: " << maxIncome << std::endl;
 		}
 		else
 		{
@@ -171,16 +186,21 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		}
 	}
 
+	std::cout << "Expected follower income:" << followerIncome << " Iteration folower average count:" << (float)followerInterCount / followerVndCount << std::endl;
+	std::cout << "Expected leader income:" << maxIncome << " Iteration count:" << iterCount << std::endl;
+
 	if (!exactLower)
 	{
-		FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		//FollowerProblemSolver folllowerSolver(leaderPrices, instance);
+		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
 		followerPrices = folllowerSolver.prices;
+		std::cout << "Exact solution for lower: " << folllowerSolver.income << std::endl;
 	}
 
 	return Solve(leaderPrices, followerPrices, instance);
 }
 
-Instance ReadInstance(const std::string& path, float leaderPart, int clip)
+Instance ReadInstance(const std::string& path, float leaderPart, int clip, int clipClients)
 {
 	std::ifstream file(path);
 
@@ -196,24 +216,32 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip)
 
 	int m1 = static_cast<int>(static_cast<float>(M) * leaderPart);
 	int m2 = M - m1;
-
-	table costsLeader = table(m1, ivector(n));
+	int n_r = std::min(n, clipClients);
+	int f;
+	table costsLeader = table(m1, ivector(n_r));
 	for (int i = 0; i < m1; ++i)
 	{
-		for (int j = 0; j < n; ++j)
+		for (int j = 0; j < n_r; ++j)
 		{
 			file >> costsLeader[i][j];
 		}
+		for (int j = n_r; j < n; ++j)
+		{
+			file >> f;
+		}
 	}
-	table costsFollower = table(m2, ivector(n));
+	table costsFollower = table(m2, ivector(n_r));
 	for (int i = 0; i < m2; ++i)
 	{
-		for (int j = 0; j < n; ++j)
+		for (int j = 0; j < n_r; ++j)
 		{
 			file >> costsFollower[i][j];
 		}
+		for (int j = n_r; j < n; ++j)
+		{
+			file >> f;
+		}
 	}
-	int f;
 	for (int i = 0; i < std::max(m - M, 0); ++i)
 	{
 		for (int j = 0; j < n; ++j)
@@ -221,8 +249,8 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip)
 			file >> f;
 		}
 	}
-	ivector budgets = ivector(n);
-	for (int j = 0; j < n; ++j)
+	ivector budgets = ivector(n_r);
+	for (int j = 0; j < n_r; ++j)
 	{
 		file >> budgets[j];
 	}
@@ -246,12 +274,12 @@ int main()
 
 		std::cout << "Test file: " << inputFile << std::endl;
 
-		Instance instance = ReadInstance(inputFile, 0.5f, 10);
+		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);
 
 		std::chrono::high_resolution_clock timer;
 		auto start = timer.now();
 
-		auto ourAnswer = VndUpperProblem(instance, true);
+		auto ourAnswer = VndUpperProblem(instance, false);
 
 		auto stop = timer.now();
 

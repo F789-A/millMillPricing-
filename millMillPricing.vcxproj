@@ -147,15 +147,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FollowerCooperativeSolver.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="Solvers.cpp" />
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="VndSolvers.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FollowerCooperativeSolver.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="Solvers.h" />
-    <ClInclude Include="VndSolvers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

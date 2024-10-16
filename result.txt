@@ -1,0 +1,9 @@
+Test file: C:/Workflow/Cpp/millMillPricing/examples\FLPr_100_100_01.txt
+Result: 123
+Time: 21.2384
+Test file: C:/Workflow/Cpp/millMillPricing/examples\FLPr_100_100_02.txt
+Result: 347
+Time: 9.17869
+Test file: C:/Workflow/Cpp/millMillPricing/examples\FLPr_100_100_03.txt
+Result: 247
+Time: 21.0846

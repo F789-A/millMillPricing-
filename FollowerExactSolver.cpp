@@ -1,9 +1,7 @@
-#include "Solvers.h"
-
-#include <iostream>
+#include "FollowerExactSolver.h"
 
 
-SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, const Instance& instance)
+SCIP_RETCODE FollowerExactSolver::SolveProblem(const ivector& leaderPrices, const Instance& instance)
 {
 	auto toIdx = [&instance](int i, int j)
 	{
@@ -21,7 +19,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	std::vector<SCIP_VAR*> z_ij(instance.followerFacilityCount * instance.clientsCount, nullptr);
 	for (auto& z : z_ij)
 	{
-		SCIP_CALL(SCIPcreateVarBasic(scip, &z, "", 0.0, SCIPinfinity(scip), 1.0, SCIP_VARTYPE_INTEGER));
+		SCIP_CALL(SCIPcreateVarBasic(scip, &z, "", 0.0, SCIPinfinity(scip), 1.0, SCIP_VARTYPE_IMPLINT));
 		SCIP_CALL(SCIPaddVar(scip, z));
 	}
 	std::vector<SCIP_VAR*> x_ij(instance.followerFacilityCount * instance.clientsCount, nullptr);
@@ -33,7 +31,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	std::vector<SCIP_VAR*> p_i(instance.followerFacilityCount, nullptr);
 	for (auto& p : p_i)
 	{
-		SCIP_CALL(SCIPcreateVarBasic(scip, &p, "", 0.0, SCIPinfinity(scip), 0.0, SCIP_VARTYPE_INTEGER));
+		SCIP_CALL(SCIPcreateVarBasic(scip, &p, "", 0.0, SCIPinfinity(scip), 0.0, SCIP_VARTYPE_IMPLINT));
 		SCIP_CALL(SCIPaddVar(scip, p));
 	}
 	
@@ -193,7 +191,7 @@ SCIP_RETCODE FollowerProblemSolver::SolveProblem(const ivector& leaderPrices, co
 	return SCIP_OKAY;
 }
 
-FollowerProblemSolver::FollowerProblemSolver(const ivector& leaderPrices, const Instance& instance)
+FollowerExactSolver::FollowerExactSolver(const ivector& leaderPrices, const Instance& instance)
 {
 	SolveProblem(leaderPrices, instance);
 }
