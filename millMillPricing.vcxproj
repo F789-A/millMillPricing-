@@ -147,15 +147,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="FollowerCooperativeSolver.cpp" />
+    <ClCompile Include="FollowerCooperativeExactSolver.cpp" />
     <ClCompile Include="Instance.cpp" />
-    <ClCompile Include="Solvers.cpp" />
+    <ClCompile Include="FollowerExactSolver.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FollowerCooperativeSolver.h" />
+    <ClInclude Include="FollowerCooperativeExactSolver.h" />
     <ClInclude Include="Instance.h" />
-    <ClInclude Include="Solvers.h" />
+    <ClInclude Include="FollowerExactSolver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

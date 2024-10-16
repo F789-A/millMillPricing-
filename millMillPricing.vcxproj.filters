@@ -18,24 +18,24 @@
     <ClCompile Include="Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Solvers.cpp">
+    <ClCompile Include="FollowerExactSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Instance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FollowerCooperativeSolver.cpp">
+    <ClCompile Include="FollowerCooperativeExactSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Solvers.h">
+    <ClInclude Include="FollowerExactSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Instance.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="FollowerCooperativeSolver.h">
+    <ClInclude Include="FollowerCooperativeExactSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

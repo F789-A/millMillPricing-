@@ -22,25 +22,55 @@ int Solve(const ivector& leaderPrice, const ivector& followerPrice, const Instan
 		for (int i = 0; i < instance.leaderFacilityCount; ++i)
 		{
 			int tmpMinLeaderCost = instance.costsLeader[i][j] + leaderPrice[i];
-			if (instance.budgets[j] - tmpMinLeaderCost >= 0 &&
-				minLeaderCost >= tmpMinLeaderCost &&
-				tmpIncome < leaderPrice[i])
+			if (instance.budgets[j] - tmpMinLeaderCost >= 0 && minLeaderCost >= tmpMinLeaderCost)
 			{
+				minLeaderCost = tmpMinLeaderCost;
 				tmpIncome = leaderPrice[i];
+			}
+		}
+		int minFollowerCost = std::numeric_limits<int>::max();
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			int tmpMinFollowerCost = instance.costsFollower[i][j] + followerPrice[i];
+			if (instance.budgets[j] - tmpMinFollowerCost >= 0 && minFollowerCost >= tmpMinFollowerCost)
+			{
+				minFollowerCost = tmpMinFollowerCost;
+			}
+		}
+		if (minLeaderCost < minFollowerCost)
+		{
+			income += tmpIncome;
+		}
+	}
+	return income;
+}
+
+int SolveLower(const ivector& leaderPrices, const ivector& followerPrices, const Instance& instance)
+{
+	int income = 0;
+	for (int j = 0; j < instance.clientsCount; ++j)
+	{
+		int tmpIncome = 0;
+		int minLeaderCost = std::numeric_limits<int>::max();
+		for (int i = 0; i < instance.leaderFacilityCount; ++i)
+		{
+			int tmpMinLeaderCost = instance.costsLeader[i][j] + leaderPrices[i];
+			if (instance.budgets[j] - tmpMinLeaderCost >= 0 && minLeaderCost >= tmpMinLeaderCost)
+			{
 				minLeaderCost = tmpMinLeaderCost;
 			}
 		}
 		int minFollowerCost = std::numeric_limits<int>::max();
 		for (int i = 0; i < instance.followerFacilityCount; ++i)
 		{
-			int tmpMinFollowerCost = instance.costsLeader[i][j] + followerPrice[i];
-			if (instance.budgets[j] - tmpMinFollowerCost >= 0 &&
-				minFollowerCost >= tmpMinFollowerCost)
+			int tmpMinFollowerCost = instance.costsFollower[i][j] + followerPrices[i];
+			if (instance.budgets[j] - tmpMinFollowerCost >= 0 && minFollowerCost >= tmpMinFollowerCost)
 			{
 				minFollowerCost = tmpMinFollowerCost;
+				tmpIncome = followerPrices[i];
 			}
 		}
-		if (minLeaderCost < minFollowerCost)
+		if (minFollowerCost < minLeaderCost)
 		{
 			income += tmpIncome;
 		}
@@ -76,11 +106,11 @@ ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance, b
 	return result;
 }
 
-ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
+ivector VndLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
 {
 	const int maxIterCount = 100 * instance.followerFacilityCount;
-	ivector followerPrices = GetFirst(instance, false);
-	int maxIncome = Solve(leaderPrices, followerPrices, instance);
+	//ivector followerPrices = GetFirst(instance, false);
+	int maxIncome = SolveLower(leaderPrices, followerPrices, instance);
 
 	int iterCount = 0;
 
@@ -93,7 +123,7 @@ ivector VndLowerProblem(const ivector& leaderPrices, const Instance& instance, i
 		for (int i = 0; i < maxIterCount; ++i)
 		{
 			ivector tmpFollowerPrices = GetRandomFromFlip(leaderPrices, instance, false);
-			int income = Solve(leaderPrices, tmpFollowerPrices, instance);
+			int income = SolveLower(leaderPrices, tmpFollowerPrices, instance);
 			if (income > incomeRecord)
 			{
 				followerRecordPrices = tmpFollowerPrices;
