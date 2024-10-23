@@ -154,27 +154,24 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 
 	int followerIterationCount = 0;
 	int followerVndCount = 0;
-	int followerIncome = 0;
+	int iterationCount = 0;
 
 	ivector leaderPrices = GetFirst(instance, true);
-	
 	FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
 	ivector followerPrices = folllowerSolver.prices;
+	int followerIncome = folllowerSolver.income;
+	int leaderIncome = Solve(leaderPrices, followerPrices, instance);
 
-	followerIncome = folllowerSolver.income;
-	int maxIncome = Solve(leaderPrices, followerPrices, instance);
-
-	int iterCount = 0;
 	while (true) 
 	{
-		++iterCount;
+		++iterationCount;
 
 		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
 		followerPrices = folllowerSolver.prices;
 
 		ivector leaderRecordPrices = leaderPrices;
 		ivector followerRecordPrices = followerPrices;
-		int incomeRecord = maxIncome;
+		int incomeRecord = leaderIncome;
 		int followerIncomeRecord = followerIncome;
 
 		for (int i = 0; i < maxIterCount; ++i)
@@ -194,11 +191,11 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 			}
 		}
 
-		if (incomeRecord > maxIncome)
+		if (incomeRecord > leaderIncome)
 		{
 			leaderPrices = leaderRecordPrices;
 			followerPrices = followerRecordPrices;
-			maxIncome = incomeRecord;
+			leaderIncome = incomeRecord;
 			followerIncome = followerIncomeRecord;
 		}
 		else
@@ -214,9 +211,9 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 	std::cout << "Expected follower income: " << followerIncome 
 		<< "; Exact solution for lower: " << folllowerSolver.income 
 		<< "; Iteration follower average count: " << (float)followerIterationCount / followerVndCount << std::endl;
-	std::cout << "Expected leader income: " << maxIncome 
+	std::cout << "Expected leader income: " << leaderIncome
 		<< "; Exact leader income: " << result 
-		<< "; Iteration count: " << iterCount << std::endl;
+		<< "; Iteration count: " << iterationCount << std::endl;
 
 	return result;
 }
