@@ -106,9 +106,9 @@ ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance, b
 	return result;
 }
 
-ivector VndLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
+ivector RlsLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
 {
-	const int maxIterCount = 100 * instance.followerFacilityCount;
+	const int maxIterCount = 1000 * instance.followerFacilityCount;
 	//ivector followerPrices = GetFirst(instance, false);]
 	ivector followerPrices = first;
 	int maxIncome = SolveLower(leaderPrices, followerPrices, instance);
@@ -148,26 +148,46 @@ ivector VndLowerProblem(const ivector& first, const ivector& leaderPrices, const
 	return followerPrices;
 }
 
-int VndUpperProblem(const Instance& instance, bool exactLower)
+int RlsUpperProblem(const Instance& instance, bool exactLower)
 {
 	const int maxIterCount = 1000 * instance.leaderFacilityCount;
 
 	int followerIterationCount = 0;
-	int followerVndCount = 0;
+	int followerRlsCount = 0;
 	int iterationCount = 0;
 
 	ivector leaderPrices = GetFirst(instance, true);
-	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
-	ivector followerPrices = followerSolver.prices;
-	int followerIncome = followerSolver.income;
-	int leaderIncome = Solve(leaderPrices, followerPrices, instance);
 
-	while (true) 
+	int followerIncome = 0;
+	int leaderIncome = 0;
+
+	int count = 0;
+	int prev = 0;
+
+	while (true && count != 3)
 	{
 		++iterationCount;
 
-		FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
-		followerPrices = folllowerSolver.prices;
+		FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
+		ivector followerPrices = followerSolver.prices;
+
+		int tmp = leaderIncome;
+
+		followerIncome = followerSolver.income;
+		leaderIncome = Solve(leaderPrices, followerPrices, instance);
+
+		std::cout << iterationCount << "; " << tmp << "; " << leaderIncome << std::endl;
+
+		if (leaderIncome == prev)
+		{
+			count++;
+		}
+		else
+		{
+			count = 0;
+		}
+
+		prev = leaderIncome;
 
 		ivector leaderRecordPrices = leaderPrices;
 		ivector followerRecordPrices = followerPrices;
@@ -178,8 +198,8 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		{
 			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance, true);
 			int followerIncomeTmp = 0;
-			ivector tmpFollowerPrices = VndLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount, followerIncomeTmp);
-			++followerVndCount;
+			ivector tmpFollowerPrices = RlsLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount, followerIncomeTmp);
+			++followerRlsCount;
 
 			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			if (income > incomeRecord)
@@ -204,13 +224,13 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		}
 	}
 
-	followerSolver = FollowerCooperativeExactSolver(leaderPrices, instance);
-	followerPrices = followerSolver.prices;
+	FollowerCooperativeExactSolver followerSolver = FollowerCooperativeExactSolver(leaderPrices, instance);
+	ivector followerPrices = followerSolver.prices;
 	int result = Solve(leaderPrices, followerPrices, instance);
 
 	std::cout << "Expected follower income: " << followerIncome 
 		<< "; Exact follower income: " << followerSolver.income 
-		<< "; Iteration follower average count: " << (float)followerIterationCount / followerVndCount << std::endl;
+		<< "; Iteration follower average count: " << (float)followerIterationCount / followerRlsCount << std::endl;
 	std::cout << "Expected leader income: " << leaderIncome
 		<< "; Exact leader income: " << result 
 		<< "; Iteration count: " << iterationCount << std::endl;
@@ -296,7 +316,7 @@ int main()
 		std::chrono::high_resolution_clock timer;
 		auto start = timer.now();
 
-		auto ourAnswer = VndUpperProblem(instance, false);
+		auto ourAnswer = RlsUpperProblem(instance, false);
 
 		auto stop = timer.now();
 
