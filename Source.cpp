@@ -289,7 +289,7 @@ int main()
 
 	for (const auto& inputFile : testPaths)
 	{
-		//std::cout << "Test file: " << inputFile << std::endl;
+		std::cout << "Test file: " << inputFile << std::endl;
 
 		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);
 
