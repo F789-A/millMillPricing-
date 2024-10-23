@@ -157,9 +157,9 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 	int iterationCount = 0;
 
 	ivector leaderPrices = GetFirst(instance, true);
-	FollowerCooperativeExactSolver folllowerSolver(leaderPrices, instance);
-	ivector followerPrices = folllowerSolver.prices;
-	int followerIncome = folllowerSolver.income;
+	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
+	ivector followerPrices = followerSolver.prices;
+	int followerIncome = followerSolver.income;
 	int leaderIncome = Solve(leaderPrices, followerPrices, instance);
 
 	while (true) 
@@ -204,12 +204,12 @@ int VndUpperProblem(const Instance& instance, bool exactLower)
 		}
 	}
 
-	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
+	followerSolver = FollowerCooperativeExactSolver(leaderPrices, instance);
 	followerPrices = followerSolver.prices;
 	int result = Solve(leaderPrices, followerPrices, instance);
 
 	std::cout << "Expected follower income: " << followerIncome 
-		<< "; Exact solution for lower: " << folllowerSolver.income 
+		<< "; Exact follower income: " << followerSolver.income 
 		<< "; Iteration follower average count: " << (float)followerIterationCount / followerVndCount << std::endl;
 	std::cout << "Expected leader income: " << leaderIncome
 		<< "; Exact leader income: " << result 
@@ -289,8 +289,7 @@ int main()
 
 	for (const auto& inputFile : testPaths)
 	{
-
-		std::cout << "Test file: " << inputFile << std::endl;
+		//std::cout << "Test file: " << inputFile << std::endl;
 
 		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);
 
@@ -304,12 +303,12 @@ int main()
 		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000000.0f;
 
 
-		std::cout << "Result: " << ourAnswer << std::endl;
+		//std::cout << "Result: " << ourAnswer << std::endl;
 		std::cout << "Time: " << deltaTime << std::endl;
 
-		out << "Test file: " << inputFile << std::endl;
-		out << "Result: " << ourAnswer << std::endl;
-		out << "Time: " << deltaTime << std::endl;
+		//out << "Test file: " << inputFile << std::endl;
+		//out << "Result: " << ourAnswer << std::endl;
+		//out << "Time: " << deltaTime << std::endl;
 	}
 
 	return 0;
