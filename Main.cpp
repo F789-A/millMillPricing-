@@ -98,6 +98,8 @@ int main()
 		//std::cout << "Result: " << ourAnswer << std::endl;
 		std::cout << "Time: " << deltaTime << std::endl;
 
+		std::cout << "----------------------------------------------" << std::endl;
+
 		//out << "Test file: " << inputFile << std::endl;
 		//out << "Result: " << ourAnswer << std::endl;
 		//out << "Time: " << deltaTime << std::endl;

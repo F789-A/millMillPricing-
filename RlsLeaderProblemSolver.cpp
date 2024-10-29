@@ -57,13 +57,27 @@ ivector RlsLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, con
 	std::uniform_int_distribution<> distrib2(pBoundMin, pBoundMax);
 	ivector result = startPrice;
 	result[facility] = distrib2(random_generator);
-	std::cout << facility << " " << result[facility] << std::endl;
+
+	return result;
+}
+
+ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, int& price, int& facility, const Instance& instance)
+{
+	ivector result = startPrice;
+	result[facility] = price;
+	++price;
+	if (price > instance.pUpperBound[facility])
+	{
+		++facility;
+		price = 0;
+	}
 	return result;
 }
 
 int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exactLower)
 {
-	const int maxIterCount = 1000 * instance.leaderFacilityCount;
+	//const int maxIterCount = 1000 * instance.leaderFacilityCount;
+	const int maxIterCount = std::accumulate(instance.pUpperBound.begin(), instance.pUpperBound.end(), 0);
 
 	int followerIterationCount = 0;
 	int followerRlsCount = 0;
@@ -74,12 +88,11 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 	int followerIncome = 0;
 	int leaderIncome = 0;
 
-	int count = 0;
-	int prev = 0;
+	int prevLeaderIncome = 0;
 
 	std::set<ivector, VectorCmp> tabu;
 
-	while (true && count != 3)
+	while (true)
 	{
 		++iterationCount;
 
@@ -93,30 +106,30 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 
 		std::cout << iterationCount << "; " << tmp << "; " << leaderIncome << std::endl;
 
-		if (leaderIncome == prev)
+		if (leaderIncome == prevLeaderIncome)
 		{
-			count++;
+			break;
 		}
-		else
-		{
-			count = 0;
-		}
-
-		prev = leaderIncome;
+		
+		prevLeaderIncome = leaderIncome;
 
 		ivector leaderRecordPrices = leaderPrices;
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = leaderIncome;
 		int followerIncomeRecord = followerIncome;
 
+		int price = 0;
+		int facility = 0;
 		for (int i = 0; i < maxIterCount; ++i)
 		{
-			ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
-			while (tabu.contains(tmpLeaderPrices))
-			{
-				tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
-			}
-			tabu.insert(tmpLeaderPrices);
+			//ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
+			//while (tabu.contains(tmpLeaderPrices))
+			//{
+			//	tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
+			//}
+			//tabu.insert(tmpLeaderPrices);
+			//ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
+			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
 
 			int followerIncomeTmp = 0;
 
