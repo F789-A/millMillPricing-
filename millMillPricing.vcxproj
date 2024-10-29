@@ -117,7 +117,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files\SCIPOptSuite 8.1.0\include;C:\Workflow\Cpp\millMillPricing\External\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,7 +135,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files\SCIPOptSuite 8.1.0\include;C:\Workflow\Cpp\millMillPricing\External\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -150,12 +150,17 @@
     <ClCompile Include="FollowerCooperativeExactSolver.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="FollowerExactSolver.cpp" />
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="RlsFollowerProblemSolver.cpp" />
+    <ClCompile Include="RlsLeaderProblemSolver.cpp" />
+    <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FollowerCooperativeExactSolver.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="FollowerExactSolver.h" />
+    <ClInclude Include="RlsLeaderProblemSolver.h" />
+    <ClInclude Include="RlsFollowerProblemSolver.h" />
+    <ClInclude Include="VectorCmp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FollowerExactSolver.cpp">
@@ -27,6 +27,12 @@
     <ClCompile Include="FollowerCooperativeExactSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RlsFollowerProblemSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RlsLeaderProblemSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FollowerExactSolver.h">
@@ -36,6 +42,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="FollowerCooperativeExactSolver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RlsLeaderProblemSolver.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorCmp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RlsFollowerProblemSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
