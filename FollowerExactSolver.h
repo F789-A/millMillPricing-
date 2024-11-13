@@ -6,10 +6,9 @@
 class FollowerExactSolver
 {
 public:
-	FollowerExactSolver(const ivector& leaderPrices, const Instance& instance);
+	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance);
 
-private:
-	SCIP_RETCODE SolveProblem(const ivector& leaderPrices, const Instance& instance);
+	const bool debug = false;
 
 public:
 	float income;

@@ -147,19 +147,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ClientProblemSolver.cpp" />
     <ClCompile Include="FollowerCooperativeExactSolver.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="FollowerExactSolver.cpp" />
     <ClCompile Include="RlsFollowerProblemSolver.cpp" />
     <ClCompile Include="RlsLeaderProblemSolver.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="SkipWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientProblemSolver.h" />
     <ClInclude Include="FollowerCooperativeExactSolver.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="FollowerExactSolver.h" />
     <ClInclude Include="RlsLeaderProblemSolver.h" />
     <ClInclude Include="RlsFollowerProblemSolver.h" />
+    <ClInclude Include="SkipWrapper.h" />
     <ClInclude Include="VectorCmp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

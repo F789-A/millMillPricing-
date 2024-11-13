@@ -1,6 +1,11 @@
 #include "FollowerCooperativeExactSolver.h"
 #include "FollowerExactSolver.h"
 
+#include "ClientProblemSolver.h"
+
+#include <iomanip>
+#include <iostream>
+
 
 SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderPrices, const Instance& instance)
 {
@@ -8,9 +13,6 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	{
 		return i * instance.clientsCount + j;
 	};
-
-	FollowerExactSolver solver(leaderPrices, instance);
-	int targetIncome = solver.income;
 
 	int facilityCount = instance.leaderFacilityCount + instance.followerFacilityCount;
 	table costs;
@@ -22,6 +24,19 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	{
 		costs.push_back(instance.costsFollower[i]);
 	}
+	ivector upperBounds;
+	for (int i = 0; i < instance.leaderFacilityCount; ++i)
+	{
+		upperBounds.push_back(instance.pUpperBound[i]);
+	}
+	for (int i = 0; i < instance.followerFacilityCount; ++i)
+	{
+		upperBounds.push_back(instance.qUpperBound[i]);
+	}
+
+	FollowerExactSolver solver;
+	solver.Solve(leaderPrices, instance);
+	int targetIncome = solver.income;
 
 	SCIP* scip = nullptr;
 	SCIP_CALL(SCIPcreate(&scip));
@@ -32,9 +47,14 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	SCIP_CALL(SCIPsetObjsense(scip, SCIP_OBJSENSE_MAXIMIZE));
 
 	std::vector<SCIP_VAR*> z_ij(facilityCount * instance.clientsCount, nullptr);
-	for (int i = 0; i < facilityCount * instance.clientsCount; ++i)
+	for (int i = 0; i < instance.leaderFacilityCount * instance.clientsCount; ++i)
 	{
-		SCIP_CALL(SCIPcreateVarBasic(scip, &z_ij[i], "", 0.0, SCIPinfinity(scip), 1.0, SCIP_VARTYPE_IMPLINT));
+		SCIP_CALL(SCIPcreateVarBasic(scip, &z_ij[i], "", 0.0, SCIPinfinity(scip), 1.0, SCIP_VARTYPE_INTEGER));
+		SCIP_CALL(SCIPaddVar(scip, z_ij[i]));
+	}
+	for (int i = instance.leaderFacilityCount * instance.clientsCount; i < facilityCount * instance.clientsCount; ++i)
+	{
+		SCIP_CALL(SCIPcreateVarBasic(scip, &z_ij[i], "", 0.0, SCIPinfinity(scip), 0.0, SCIP_VARTYPE_INTEGER));
 		SCIP_CALL(SCIPaddVar(scip, z_ij[i]));
 	}
 	std::vector<SCIP_VAR*> x_ij(facilityCount * instance.clientsCount, nullptr);
@@ -46,17 +66,17 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	std::vector<SCIP_VAR*> p_i(instance.followerFacilityCount, nullptr);
 	for (auto& p : p_i)
 	{
-		SCIP_CALL(SCIPcreateVarBasic(scip, &p, "", 0.0, SCIPinfinity(scip), 0.0, SCIP_VARTYPE_IMPLINT));
+		SCIP_CALL(SCIPcreateVarBasic(scip, &p, "", 0.0, SCIPinfinity(scip), 0.0, SCIP_VARTYPE_INTEGER));
 		SCIP_CALL(SCIPaddVar(scip, p));
 	}
 
 	SCIP_CONS* mainConstr;
 	SCIP_CALL(SCIPcreateConsBasicLinear(scip, &mainConstr, "", 0, nullptr, nullptr, targetIncome, targetIncome));
-	for (int i = instance.followerFacilityCount * instance.clientsCount; 
-		i < facilityCount * instance.clientsCount; ++i)
+	for (int i = instance.leaderFacilityCount * instance.clientsCount; i < facilityCount * instance.clientsCount; ++i)
 	{
 		SCIP_CALL(SCIPaddCoefLinear(scip, mainConstr, z_ij[i], 1));
 	}
+	SCIP_CALL(SCIPaddCons(scip, mainConstr));
 
 	std::vector<SCIP_CONS*> constr1(instance.clientsCount, nullptr);
 	for (int j = 0; j < instance.clientsCount; ++j)
@@ -73,10 +93,9 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	std::vector<SCIP_CONS*> constr2(instance.clientsCount * facilityCount, nullptr);
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
-		for (int k = instance.leaderFacilityCount; k < facilityCount; ++k)
+		for (int k = 0; k < instance.leaderFacilityCount; ++k)
 		{
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j], SCIPinfinity(scip)));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], p_i[k - instance.leaderFacilityCount], 1.0));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j] - leaderPrices[k], SCIPinfinity(scip)));
 			for (int i = 0; i < instance.followerFacilityCount; ++i)
 			{
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], x_ij[toIdx(i, j)], -costs[i][j]));
@@ -84,9 +103,10 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 			}
 			SCIP_CALL(SCIPaddCons(scip, constr2[toIdx(k, j)]));
 		}
-		for (int k = 0; k < instance.leaderFacilityCount; ++k)
+		for (int k = instance.leaderFacilityCount; k < facilityCount; ++k)
 		{
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j] - leaderPrices[k], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], p_i[k - instance.leaderFacilityCount], 1.0));
 			for (int i = 0; i < instance.followerFacilityCount; ++i)
 			{
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], x_ij[toIdx(i, j)], -costs[i][j]));
@@ -100,32 +120,31 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	std::vector<SCIP_CONS*> constr4(instance.clientsCount * facilityCount, nullptr);
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
-		int offset = instance.leaderFacilityCount;
-		for (int i = instance.leaderFacilityCount; i < facilityCount; ++i)
+		for (int i = 0; i < instance.leaderFacilityCount; ++i)
 		{
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr3[toIdx(i, j)], "", 0, nullptr, nullptr, -instance.qUpperBound[i- offset], SCIPinfinity(scip)));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], p_i[i- offset], 1.0));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.qUpperBound[i- offset]));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr3[toIdx(i, j)], "", 0, nullptr, nullptr, -upperBounds[i] - leaderPrices[i], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], x_ij[toIdx(i, j)], -upperBounds[i]));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], z_ij[toIdx(i, j)], -1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr3[toIdx(i, j)]));
 
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr4[toIdx(i, j)], "", 0, nullptr, nullptr, -instance.qUpperBound[i- offset], SCIPinfinity(scip)));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], p_i[i- offset], -1.0));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.qUpperBound[i- offset]));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr4[toIdx(i, j)], "", 0, nullptr, nullptr, -upperBounds[i] + leaderPrices[i], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], x_ij[toIdx(i, j)], -upperBounds[i]));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], z_ij[toIdx(i, j)], 1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr4[toIdx(i, j)]));
 		}
 
-
-		for (int i = 0; i < instance.leaderFacilityCount; ++i)
+		int offset = instance.leaderFacilityCount;
+		for (int i = instance.leaderFacilityCount; i < facilityCount; ++i)
 		{
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr3[toIdx(i, j)], "", 0, nullptr, nullptr, -instance.pUpperBound[i] - leaderPrices[i], SCIPinfinity(scip)));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.pUpperBound[i]));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr3[toIdx(i, j)], "", 0, nullptr, nullptr, -upperBounds[i], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], p_i[i - offset], 1.0));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], x_ij[toIdx(i, j)], -upperBounds[i]));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr3[toIdx(i, j)], z_ij[toIdx(i, j)], -1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr3[toIdx(i, j)]));
 
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr4[toIdx(i, j)], "", 0, nullptr, nullptr, -instance.pUpperBound[i] + leaderPrices[i], SCIPinfinity(scip)));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.pUpperBound[i]));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr4[toIdx(i, j)], "", 0, nullptr, nullptr, -upperBounds[i], SCIPinfinity(scip)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], p_i[i - offset], -1.0));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], x_ij[toIdx(i, j)], -upperBounds[i]));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr4[toIdx(i, j)], z_ij[toIdx(i, j)], 1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr4[toIdx(i, j)]));
 		}
@@ -134,19 +153,10 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	std::vector<SCIP_CONS*> constr5(instance.clientsCount * facilityCount, nullptr);
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
-		int offset = instance.leaderFacilityCount;
-		for (int i = instance.leaderFacilityCount; i < facilityCount; ++i)
+		for (int i = 0; i < facilityCount; ++i)
 		{
 			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr5[toIdx(i, j)], "", 0, nullptr, nullptr, -SCIPinfinity(scip), 0.0));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr5[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.qUpperBound[i- offset]));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr5[toIdx(i, j)], z_ij[toIdx(i, j)], 1.0));
-			SCIP_CALL(SCIPaddCons(scip, constr5[toIdx(i, j)]));
-		}
-
-		for (int i = 0; i < instance.leaderFacilityCount; ++i)
-		{
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr5[toIdx(i, j)], "", 0, nullptr, nullptr, -SCIPinfinity(scip), 0.0));
-			SCIP_CALL(SCIPaddCoefLinear(scip, constr5[toIdx(i, j)], x_ij[toIdx(i, j)], -instance.pUpperBound[i]));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr5[toIdx(i, j)], x_ij[toIdx(i, j)], -upperBounds[i]));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr5[toIdx(i, j)], z_ij[toIdx(i, j)], 1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr5[toIdx(i, j)]));
 		}
@@ -168,12 +178,57 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	sol = SCIPgetBestSol(scip);
 
 	//puck data
-	income = SCIPgetSolOrigObj(scip, sol);
+	income = targetIncome;
 	prices.resize(instance.followerFacilityCount);
 	for (int i = 0; i < instance.followerFacilityCount; ++i)
 	{
-		prices[i] = SCIPgetSolVal(scip, sol, p_i[i]);
+		prices[i] = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
 	}
+
+	if (debug)
+	{
+		std::cout << "--------------------------------------------------" << std::endl;
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			for (int j = 0; j < instance.clientsCount; ++j)
+			{
+				double z = std::round(SCIPgetSolVal(scip, sol, z_ij[toIdx(i, j)]));
+				std::cout << std::setw(3) << z;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			for (int j = 0; j < instance.clientsCount; ++j)
+			{
+				double x = std::round(SCIPgetSolVal(scip, sol, x_ij[toIdx(i, j)]));
+				std::cout << std::setw(3) << x;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			int p = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
+			std::cout << std::setw(3) << p;
+		}
+		std::cout << std::endl;
+		std::cout << "--------------------------------------------------" << std::endl;
+	}
+
+	for (int i = 0; i < instance.leaderFacilityCount; ++i)
+	{
+		int p = leaderPrices[i];
+		std::cout << std::setw(3) << p;
+	}
+	std::cout << std::endl;
+
+	int leaderIncome = std::round(SCIPgetSolOrigObj(scip, sol));
+	ClientProblemSolver cps;
+	cps.Solve(leaderPrices, prices, instance);
+	std::cout << cps.leaderIncome << " " << leaderIncome << std::endl;
+	assert(cps.leaderIncome == leaderIncome);
 
 	SCIP_CALL(SCIPreleaseCons(scip, &mainConstr));
 	for (auto& l : constr1)

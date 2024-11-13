@@ -75,9 +75,19 @@ int main()
 	{
 		testPaths.push_back(entry.path().string());
 	}
-
+	int i = 0;
+	std::set<int> ignoreList;
+	//ignoreList.insert(0);
+	//ignoreList.insert(1);
 	for (const auto& inputFile : testPaths)
 	{
+		if (ignoreList.contains(i))
+		{
+			i++;
+			continue;
+		}
+		++i;
+
 		std::cout << "Test file: " << inputFile << std::endl;
 
 		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);

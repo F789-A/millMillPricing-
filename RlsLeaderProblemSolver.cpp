@@ -1,38 +1,5 @@
 #include "RlsLeaderProblemSolver.h"
 
-int RlsLeaderProblemSolver::Solve(const ivector& leaderPrice, const ivector& followerPrice, const Instance& instance)
-{
-	int income = 0;
-	for (int j = 0; j < instance.clientsCount; ++j)
-	{
-		int tmpIncome = 0;
-		int minLeaderCost = std::numeric_limits<int>::max();
-		for (int i = 0; i < instance.leaderFacilityCount; ++i)
-		{
-			int tmpMinLeaderCost = instance.costsLeader[i][j] + leaderPrice[i];
-			if (instance.budgets[j] - tmpMinLeaderCost >= 0 && minLeaderCost >= tmpMinLeaderCost)
-			{
-				minLeaderCost = tmpMinLeaderCost;
-				tmpIncome = leaderPrice[i];
-			}
-		}
-		int minFollowerCost = std::numeric_limits<int>::max();
-		for (int i = 0; i < instance.followerFacilityCount; ++i)
-		{
-			int tmpMinFollowerCost = instance.costsFollower[i][j] + followerPrice[i];
-			if (instance.budgets[j] - tmpMinFollowerCost >= 0 && minFollowerCost >= tmpMinFollowerCost)
-			{
-				minFollowerCost = tmpMinFollowerCost;
-			}
-		}
-		if (minLeaderCost < minFollowerCost)
-		{
-			income += tmpIncome;
-		}
-	}
-	return income;
-}
-
 ivector RlsLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
 {
 	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
@@ -47,7 +14,7 @@ ivector RlsLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, con
 {
 	static std::seed_seq seed_w({ 123123 });
 	static auto random_generator = std::mt19937(seed_w);
-	std::uniform_int_distribution<> distrib1(0, startPrice.size() - 1);
+	std::uniform_int_distribution<> distrib1(0, static_cast<int>(startPrice.size()) - 1);
 
 	int facility = distrib1(random_generator);
 
@@ -85,38 +52,35 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 
 	ivector leaderPrices = GetFirst(instance, true);
 
-	int followerIncome = 0;
 	int leaderIncome = 0;
-
 	int prevLeaderIncome = 0;
+	ivector prevLeaderPrices;
 
-	std::set<ivector, VectorCmp> tabu;
+	//std::set<ivector, VectorCmp> tabu;
 
-	while (true)
+	for(; true; ++iterationCount)
 	{
-		++iterationCount;
+		int leaderIncomeFindedInPrevIter = leaderIncome;
 
 		FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
 		ivector followerPrices = followerSolver.prices;
+		clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+		leaderIncome = clientProblemSolver.leaderIncome;
 
-		int tmp = leaderIncome;
+		std::cout << iterationCount << "; " << leaderIncomeFindedInPrevIter << "; "
+			<< leaderIncome << "; " << followerIterationCount << "; " << followerSolver.income << std::endl;
 
-		followerIncome = followerSolver.income;
-		leaderIncome = Solve(leaderPrices, followerPrices, instance);
-
-		std::cout << iterationCount << "; " << tmp << "; " << leaderIncome << std::endl;
-
-		if (leaderIncome == prevLeaderIncome)
+		if (prevLeaderIncome > leaderIncome)
 		{
+			leaderIncome = prevLeaderIncome;
+			leaderPrices = prevLeaderPrices;
 			break;
 		}
-		
+		prevLeaderPrices = leaderPrices;
 		prevLeaderIncome = leaderIncome;
 
 		ivector leaderRecordPrices = leaderPrices;
-		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = leaderIncome;
-		int followerIncomeRecord = followerIncome;
 
 		int price = 0;
 		int facility = 0;
@@ -131,45 +95,50 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 			//ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
 			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
 
-			int followerIncomeTmp = 0;
-
 			RlsFollowerProblemSolver rlsFollowerProblemSolver;
-
-			ivector tmpFollowerPrices = rlsFollowerProblemSolver.RlsLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount, followerIncomeTmp);
+			followerIterationCount = 0;
+			ivector tmpFollowerPrices = rlsFollowerProblemSolver.RlsLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount);
+			tmpFollowerPrices = followerSolver.prices;
 			++followerRlsCount;
 
-			int income = Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
-			if (income > incomeRecord)
+			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
+			int tmpIncome = clientProblemSolver.leaderIncome;
+			if (tmpIncome > incomeRecord)
 			{
 				leaderRecordPrices = tmpLeaderPrices;
-				followerRecordPrices = tmpFollowerPrices;
-				incomeRecord = income;
-				followerIncomeRecord = followerIncomeTmp;
+				incomeRecord = tmpIncome;
 			}
 		}
 
 		if (incomeRecord > leaderIncome)
 		{
 			leaderPrices = leaderRecordPrices;
-			followerPrices = followerRecordPrices;
 			leaderIncome = incomeRecord;
-			followerIncome = followerIncomeRecord;
 		}
 		else
 		{
+
+			++iterationCount;
+
+			FollowerCooperativeExactSolver followerSolver(leaderRecordPrices, instance);
+			ivector followerPrices = followerSolver.prices;
+			clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+			std::cout << iterationCount << "; " << incomeRecord << "; " << clientProblemSolver.leaderIncome << "; " << followerIterationCount << std::endl;
 			break;
 		}
 	}
 
 	FollowerCooperativeExactSolver followerSolver = FollowerCooperativeExactSolver(leaderPrices, instance);
 	ivector followerPrices = followerSolver.prices;
-	int result = Solve(leaderPrices, followerPrices, instance);
 
-	std::cout << "Expected follower income: " << followerIncome
-		<< "; Exact follower income: " << followerSolver.income
-		<< "; Iteration follower average count: " << (float)followerIterationCount / followerRlsCount << std::endl;
-	std::cout << "Expected leader income: " << leaderIncome
-		<< "; Exact leader income: " << result
+	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+	int result = clientProblemSolver.leaderIncome;
+
+	//std::cout << "Expected follower income: " << followerIncome
+		//<< "; Exact follower income: " << followerSolver.income
+		//<< "; Iteration follower average count: " << (float)followerIterationCount / followerRlsCount << std::endl;
+	std::cout //<< "Expected leader income: " << leaderIncome
+		<< "Exact leader income: " << result
 		<< "; Iteration count: " << iterationCount << std::endl;
 
 	return result;

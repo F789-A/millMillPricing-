@@ -1,38 +1,5 @@
 #include "RlsFollowerProblemSolver.h"
 
-int RlsFollowerProblemSolver::SolveLower(const ivector& leaderPrices, const ivector& followerPrices, const Instance& instance)
-{
-	int income = 0;
-	for (int j = 0; j < instance.clientsCount; ++j)
-	{
-		int tmpIncome = 0;
-		int minLeaderCost = std::numeric_limits<int>::max();
-		for (int i = 0; i < instance.leaderFacilityCount; ++i)
-		{
-			int tmpMinLeaderCost = instance.costsLeader[i][j] + leaderPrices[i];
-			if (instance.budgets[j] - tmpMinLeaderCost >= 0 && minLeaderCost >= tmpMinLeaderCost)
-			{
-				minLeaderCost = tmpMinLeaderCost;
-			}
-		}
-		int minFollowerCost = std::numeric_limits<int>::max();
-		for (int i = 0; i < instance.followerFacilityCount; ++i)
-		{
-			int tmpMinFollowerCost = instance.costsFollower[i][j] + followerPrices[i];
-			if (instance.budgets[j] - tmpMinFollowerCost >= 0 && minFollowerCost >= tmpMinFollowerCost)
-			{
-				minFollowerCost = tmpMinFollowerCost;
-				tmpIncome = followerPrices[i];
-			}
-		}
-		if (minFollowerCost < minLeaderCost)
-		{
-			income += tmpIncome;
-		}
-	}
-	return income;
-}
-
 ivector RlsFollowerProblemSolver::GetFirst(const Instance& instance, bool upper)
 {
 	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
@@ -47,7 +14,7 @@ ivector RlsFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, c
 {
 	static std::seed_seq seed_w({ 123123 });
 	static auto random_generator = std::mt19937(seed_w);
-	std::uniform_int_distribution<> distrib1(0, startPrice.size() - 1);
+	std::uniform_int_distribution<> distrib1(0, static_cast<int>(startPrice.size()) - 1);
 
 	int facility = distrib1(random_generator);
 
@@ -60,29 +27,48 @@ ivector RlsFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, c
 	return result;
 }
 
-ivector RlsFollowerProblemSolver::RlsLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount, int& income)
+ivector RlsFollowerProblemSolver::GetFromFlip(const ivector& startPrice, int& price, int& facility, const Instance& instance)
 {
-	const int maxIterCount = 1000 * instance.followerFacilityCount;
+	ivector result = startPrice;
+	result[facility] = price;
+	++price;
+	if (price > instance.qUpperBound[facility])
+	{
+		++facility;
+		price = 0;
+	}
+	return result;
+}
+
+ivector RlsFollowerProblemSolver::RlsLowerProblem(const ivector& first, const ivector& leaderPrices, const Instance& instance, int& iterrCount)
+{
+	//const int maxIterCount = 1000 * instance.followerFacilityCount;
+	const int maxIterCount = std::accumulate(instance.qUpperBound.begin(), instance.qUpperBound.end(), 0);
+
 	//ivector followerPrices = GetFirst(instance, false);]
 	ivector followerPrices = first;
-	int maxIncome = SolveLower(leaderPrices, followerPrices, instance);
 
-	int iterCount = 0;
+	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+	int maxIncome = clientProblemSolver.followerIncome;
 
 	while (true)
 	{
-		++iterCount;
+		++iterrCount;
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
 
+		int price = 0;
+		int facility = 0;
 		for (int i = 0; i < maxIterCount; ++i)
 		{
-			ivector tmpFollowerPrices = GetRandomFromFlip(leaderPrices, instance);
-			int income = SolveLower(leaderPrices, tmpFollowerPrices, instance);
-			if (income > incomeRecord)
+			ivector tmpFollowerPrices = GetFromFlip(followerPrices, price, facility, instance);
+
+			clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);
+			int tmpIncome = clientProblemSolver.followerIncome;
+			if (tmpIncome > incomeRecord)
 			{
 				followerRecordPrices = tmpFollowerPrices;
-				incomeRecord = income;
+				incomeRecord = tmpIncome;
 			}
 		}
 
@@ -97,7 +83,5 @@ ivector RlsFollowerProblemSolver::RlsLowerProblem(const ivector& first, const iv
 		}
 	}
 
-	income = maxIncome;
-	iterrCount += iterCount;
 	return followerPrices;
 }
