@@ -135,7 +135,7 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 		for (int i = 0; i < instance.followerFacilityCount; ++i)
 		{
 			SCIP_CONS* constr = nullptr;
-			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr, "", 0, nullptr, nullptr, -SCIPinfinity(scip), std::max(0, leaderBestOffer[j] - instance.costsFollower[i][j])));
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr, "", 0, nullptr, nullptr, -SCIPinfinity(scip), std::max(0, leaderBestOffer[j] - instance.costsFollower[i][j] - 1)));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr, z_ij[i][j], 1.0));
 			SCIP_CALL(SCIPaddCons(scip, constr));
 			constr7.push_back(constr);

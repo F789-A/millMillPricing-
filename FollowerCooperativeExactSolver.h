@@ -11,7 +11,7 @@ public:
 private:
 	SCIP_RETCODE SolveProblem(const ivector& leaderPrices, const Instance& instance);
 
-	const bool debug = true;
+	const bool debug = false;
 
 public:
 	float income;

@@ -9,5 +9,4 @@ public:
 	int leaderIncome;
 	int followerIncome;
 	std::vector<char> clientChose;
-	std::vector<int> _clientChose; // TODO remove
 };

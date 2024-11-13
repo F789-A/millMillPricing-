@@ -74,7 +74,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	SCIP_CALL(SCIPcreateConsBasicLinear(scip, &mainConstr, "", 0, nullptr, nullptr, targetIncome, targetIncome));
 	for (int i = instance.leaderFacilityCount * instance.clientsCount; i < facilityCount * instance.clientsCount; ++i)
 	{
-		SCIP_CALL(SCIPaddCoefLinear(scip, mainConstr, z_ij[i], 1));
+		SCIP_CALL(SCIPaddCoefLinear(scip, mainConstr, z_ij[i], 1.0));
 	}
 	SCIP_CALL(SCIPaddCons(scip, mainConstr));
 
@@ -93,10 +93,11 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	std::vector<SCIP_CONS*> constr2(instance.clientsCount * facilityCount, nullptr);
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
+		//incorrect
 		for (int k = 0; k < instance.leaderFacilityCount; ++k)
 		{
 			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j] - leaderPrices[k], SCIPinfinity(scip)));
-			for (int i = 0; i < instance.followerFacilityCount; ++i)
+			for (int i = 0; i < facilityCount; ++i)
 			{
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], x_ij[toIdx(i, j)], -costs[i][j]));
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], z_ij[toIdx(i, j)], -1.0));
@@ -107,7 +108,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		{
 			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr2[toIdx(k, j)], "", 0, nullptr, nullptr, -costs[k][j], SCIPinfinity(scip)));
 			SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], p_i[k - instance.leaderFacilityCount], 1.0));
-			for (int i = 0; i < instance.followerFacilityCount; ++i)
+			for (int i = 0; i < facilityCount; ++i)
 			{
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], x_ij[toIdx(i, j)], -costs[i][j]));
 				SCIP_CALL(SCIPaddCoefLinear(scip, constr2[toIdx(k, j)], z_ij[toIdx(i, j)], -1.0));
@@ -173,6 +174,36 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		SCIP_CALL(SCIPaddCons(scip, constr6[j]));
 	}
 
+	//запрещаем кооперацию с последователем
+	ivector leaderBestOffer(instance.clientsCount, std::numeric_limits<int>::max());
+	for (int j = 0; j < instance.clientsCount; ++j)
+	{
+		for (int i = 0; i < instance.leaderFacilityCount; ++i)
+		{
+			if (instance.budgets[j] - instance.costsLeader[i][j] - leaderPrices[i] >= 0)
+			{
+				leaderBestOffer[j] = std::min(leaderBestOffer[j], instance.costsLeader[i][j] + leaderPrices[i]);
+			}
+		}
+	}
+
+	std::vector<SCIP_CONS*> constr7;
+	for (int j = 0; j < instance.clientsCount; ++j)
+	{
+		if (leaderBestOffer[j] == std::numeric_limits<int>::max())
+		{
+			continue;
+		}
+		for (int i = instance.followerFacilityCount; i < facilityCount; ++i)
+		{
+			SCIP_CONS* constr = nullptr;
+			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr, "", 0, nullptr, nullptr, -SCIPinfinity(scip), std::max(0, leaderBestOffer[j] - costs[i][j] - 1)));
+			SCIP_CALL(SCIPaddCoefLinear(scip, constr, z_ij[toIdx(i, j)], 1.0));
+			SCIP_CALL(SCIPaddCons(scip, constr));
+			constr7.push_back(constr);
+		}
+	}
+
 	SCIP_CALL(SCIPsolve(scip));
 	SCIP_SOL* sol = nullptr;
 	sol = SCIPgetBestSol(scip);
@@ -188,7 +219,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	if (debug)
 	{
 		std::cout << "--------------------------------------------------" << std::endl;
-		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		for (int i = 0; i < facilityCount; ++i)
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
@@ -198,7 +229,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 			std::cout << std::endl;
 		}
 		std::cout << std::endl;
-		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		for (int i = 0; i < facilityCount; ++i)
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
@@ -217,17 +248,9 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		std::cout << "--------------------------------------------------" << std::endl;
 	}
 
-	for (int i = 0; i < instance.leaderFacilityCount; ++i)
-	{
-		int p = leaderPrices[i];
-		std::cout << std::setw(3) << p;
-	}
-	std::cout << std::endl;
-
 	int leaderIncome = std::round(SCIPgetSolOrigObj(scip, sol));
 	ClientProblemSolver cps;
 	cps.Solve(leaderPrices, prices, instance);
-	std::cout << cps.leaderIncome << " " << leaderIncome << std::endl;
 	assert(cps.leaderIncome == leaderIncome);
 
 	SCIP_CALL(SCIPreleaseCons(scip, &mainConstr));
@@ -252,6 +275,10 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		SCIP_CALL(SCIPreleaseCons(scip, &l));
 	}
 	for (auto& l : constr6)
+	{
+		SCIP_CALL(SCIPreleaseCons(scip, &l));
+	}
+	for (auto& l : constr7)
 	{
 		SCIP_CALL(SCIPreleaseCons(scip, &l));
 	}

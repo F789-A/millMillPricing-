@@ -35,22 +35,19 @@ void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& follo
 				followerBestFacility = i;
 			}
 		}
-		if (minLeaderCost < minFollowerCost && leaderBestFacility >= 0)
+		if (minLeaderCost <= minFollowerCost && leaderBestFacility >= 0)
 		{
 			leaderIncome += leaderPrice[leaderBestFacility];
 			clientChose.push_back('l');
-			_clientChose.push_back(9);
 		}
-		else if (minLeaderCost >= minFollowerCost && followerBestFacility >= 0)
+		else if (minLeaderCost > minFollowerCost && followerBestFacility >= 0)
 		{
 			followerIncome += followerPrice[followerBestFacility];
 			clientChose.push_back('f');
-			_clientChose.push_back(followerBestFacility);
 		}
 		else
 		{
 			clientChose.push_back('u');
-			_clientChose.push_back(9);
 		}
 	}
 }
