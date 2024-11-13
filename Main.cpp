@@ -6,6 +6,7 @@
 #include "Instance.h"
 
 #include "RlsLeaderProblemSolver.h"
+#include "HighPointRelaxation.h"
 
 Instance ReadInstance(const std::string& path, float leaderPart, int clip, int clipClients)
 {
@@ -107,6 +108,10 @@ int main()
 
 		//std::cout << "Result: " << ourAnswer << std::endl;
 		std::cout << "Time: " << deltaTime << std::endl;
+
+		HighPointRelaxation relax;
+		relax.Solve(instance);
+		std::cout << "HighPointRelaxation: " << relax.income << std::endl;
 
 		std::cout << "----------------------------------------------" << std::endl;
 

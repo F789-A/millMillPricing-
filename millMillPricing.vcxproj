@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="ClientProblemSolver.cpp" />
     <ClCompile Include="FollowerCooperativeExactSolver.cpp" />
+    <ClCompile Include="HighPointRelaxation.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="FollowerExactSolver.cpp" />
     <ClCompile Include="RlsFollowerProblemSolver.cpp" />
@@ -159,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="ClientProblemSolver.h" />
     <ClInclude Include="FollowerCooperativeExactSolver.h" />
+    <ClInclude Include="HighPointRelaxation.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="FollowerExactSolver.h" />
     <ClInclude Include="RlsLeaderProblemSolver.h" />

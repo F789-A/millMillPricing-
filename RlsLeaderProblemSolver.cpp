@@ -57,7 +57,7 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 	ivector prevLeaderPrices;
 
 	//std::set<ivector, VectorCmp> tabu;
-
+	
 	for(; true; ++iterationCount)
 	{
 		int leaderIncomeFindedInPrevIter = leaderIncome;
@@ -67,8 +67,8 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 		clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 		leaderIncome = clientProblemSolver.leaderIncome;
 
-		std::cout << iterationCount << "; " << leaderIncomeFindedInPrevIter << "; "
-			<< leaderIncome << "; " << followerIterationCount << "; " << followerSolver.income << std::endl;
+		std::cout << std::setw(3) << iterationCount << ";" << std::setw(4) << leaderIncomeFindedInPrevIter << ";"
+			<< std::setw(4) << leaderIncome << ";" << std::setw(4) << followerSolver.income << ";" << std::endl;
 
 		if (prevLeaderIncome > leaderIncome)
 		{
