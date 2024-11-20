@@ -99,7 +99,7 @@ int main()
 
 		RlsLeaderProblemSolver solver;
 
-		auto ourAnswer = solver.RlsUpperProblem(instance, false);
+		auto ourAnswer = solver.RlsUpperProblemExactLower(instance);
 
 		auto stop = timer.now();
 

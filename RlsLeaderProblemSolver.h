@@ -23,7 +23,8 @@ public:
 	ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance);
 	ivector GetFromFlip(const ivector& startPrice, int& price, int& facility, const Instance& instance);
 
-	int RlsUpperProblem(const Instance& instance, bool exactLower);
+	int RlsUpperProblem(const Instance& instance);
+	int RlsUpperProblemExactLower(const Instance& instance);
 
 	ClientProblemSolver clientProblemSolver;
 };

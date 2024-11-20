@@ -41,13 +41,11 @@ ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, int& pric
 	return result;
 }
 
-int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exactLower)
+int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance)
 {
 	//const int maxIterCount = 1000 * instance.leaderFacilityCount;
 	const int maxIterCount = std::accumulate(instance.pUpperBound.begin(), instance.pUpperBound.end(), 0);
 
-	int followerIterationCount = 0;
-	int followerRlsCount = 0;
 	int iterationCount = 0;
 
 	ivector leaderPrices = GetFirst(instance, true);
@@ -96,10 +94,9 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
 
 			RlsFollowerProblemSolver rlsFollowerProblemSolver;
-			followerIterationCount = 0;
+			int followerIterationCount = 0;
 			ivector tmpFollowerPrices = rlsFollowerProblemSolver.RlsLowerProblem(followerPrices, tmpLeaderPrices, instance, followerIterationCount);
 			tmpFollowerPrices = followerSolver.prices;
-			++followerRlsCount;
 
 			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			int tmpIncome = clientProblemSolver.leaderIncome;
@@ -123,7 +120,8 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 			FollowerCooperativeExactSolver followerSolver(leaderRecordPrices, instance);
 			ivector followerPrices = followerSolver.prices;
 			clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
-			std::cout << iterationCount << "; " << incomeRecord << "; " << clientProblemSolver.leaderIncome << "; " << followerIterationCount << std::endl;
+			std::cout << std::setw(3) << iterationCount << ";" << std::setw(4) << leaderIncomeFindedInPrevIter << ";"
+				<< std::setw(4) << leaderIncome << ";" << std::setw(4) << followerSolver.income << ";" << std::endl;
 			break;
 		}
 	}
@@ -134,11 +132,78 @@ int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance, bool exact
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int result = clientProblemSolver.leaderIncome;
 
-	//std::cout << "Expected follower income: " << followerIncome
-		//<< "; Exact follower income: " << followerSolver.income
-		//<< "; Iteration follower average count: " << (float)followerIterationCount / followerRlsCount << std::endl;
-	std::cout //<< "Expected leader income: " << leaderIncome
+	std::cout << "Expected leader income: " << leaderIncome
 		<< "Exact leader income: " << result
+		<< "; Iteration count: " << iterationCount << std::endl;
+
+	return result;
+}
+
+int RlsLeaderProblemSolver::RlsUpperProblemExactLower(const Instance& instance)
+{
+	const int maxIterCount = std::accumulate(instance.pUpperBound.begin(), instance.pUpperBound.end(), 0);
+
+	int iterationCount = 0;
+
+	ivector leaderPrices = GetFirst(instance, true);
+
+	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
+	ivector followerPrices = followerSolver.prices;
+	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+	int leaderIncome = clientProblemSolver.leaderIncome;
+
+	int followerLastIncome = clientProblemSolver.followerIncome;
+
+	for (; true; ++iterationCount)
+	{
+		std::cout << std::setw(3) << iterationCount << ";"
+			<< std::setw(4) << leaderIncome << ";" << std::setw(4) << followerLastIncome << ";" << std::endl;
+
+		ivector leaderRecordPrices = leaderPrices;
+		int incomeRecord = leaderIncome;
+
+		int price = 0;
+		int facility = 0;
+		for (int i = 0; i < maxIterCount; ++i)
+		{
+			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
+
+			FollowerCooperativeExactSolver _followerSolver(tmpLeaderPrices, instance);
+			ivector tmpFollowerPrices = _followerSolver.prices;
+
+			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
+			int tmpIncome = clientProblemSolver.leaderIncome;
+			if (tmpIncome > incomeRecord)
+			{
+				leaderRecordPrices = tmpLeaderPrices;
+				incomeRecord = tmpIncome;
+
+				followerLastIncome = clientProblemSolver.followerIncome;
+			}
+		}
+
+		if (incomeRecord > leaderIncome)
+		{
+			leaderPrices = leaderRecordPrices;
+			leaderIncome = incomeRecord;
+		}
+		else
+		{
+			++iterationCount;
+
+			std::cout << std::setw(3) << iterationCount << ";"
+				<< std::setw(4) << leaderIncome << ";" << std::setw(4) << followerLastIncome << ";" << std::endl;
+			break;
+		}
+	}
+
+	FollowerCooperativeExactSolver _followerSolver = FollowerCooperativeExactSolver(leaderPrices, instance);
+	followerPrices = _followerSolver.prices;
+
+	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
+	int result = clientProblemSolver.leaderIncome;
+
+	std::cout << "Exact leader income: " << result
 		<< "; Iteration count: " << iterationCount << std::endl;
 
 	return result;
