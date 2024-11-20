@@ -28,34 +28,47 @@ ivector RlsLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, con
 	return result;
 }
 
-ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, int& price, int& facility, const Instance& instance)
+ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, 
+	SubsetIterator& facilityIter, const Instance& instance)
 {
 	ivector result = startPrice;
-	result[facility] = price;
-	++price;
-	if (price > instance.pUpperBound[facility])
+
+	const std::vector<int>& facilityes = *facilityIter;
+
+	for (int i = 0; i < facilityes.size(); ++i)
 	{
-		++facility;
-		price = 0;
+		result[facilityes[i]] = priceIter[i];
 	}
+
+	for (int i = facilityIter.Cardinality() - 1; i >= 0; --i)
+	{
+		++priceIter[i];
+		if (priceIter[i] > instance.pUpperBound[facilityes[i]])
+		{
+			priceIter[i] = 0;
+			if (i == 0)
+			{
+				++facilityIter;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
 	return result;
 }
 
 int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& instance)
 {
-	//const int maxIterCount = 1000 * instance.leaderFacilityCount;
-	const int maxIterCount = std::accumulate(instance.pUpperBound.begin(), instance.pUpperBound.end(), 0);
-
-	int iterationCount = 0;
-
 	ivector leaderPrices = GetFirst(instance, true);
 
 	int leaderIncome = 0;
 	int prevLeaderIncome = 0;
 	ivector prevLeaderPrices;
 
-	//std::set<ivector, VectorCmp> tabu;
-	
+	int iterationCount = 0;
 	for(; true; ++iterationCount)
 	{
 		int leaderIncomeFindedInPrevIter = leaderIncome;
@@ -80,18 +93,11 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 		ivector leaderRecordPrices = leaderPrices;
 		int incomeRecord = leaderIncome;
 
-		int price = 0;
-		int facility = 0;
-		for (int i = 0; i < maxIterCount; ++i)
+		SubsetIterator facilityIterator(instance.leaderFacilityCount, FlipCount);
+		std::vector<int> facilityPrices(FlipCount, 0);
+		while (!facilityIterator.End())
 		{
-			//ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
-			//while (tabu.contains(tmpLeaderPrices))
-			//{
-			//	tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
-			//}
-			//tabu.insert(tmpLeaderPrices);
-			//ivector tmpLeaderPrices = GetRandomFromFlip(leaderPrices, instance);
-			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
+			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
 
 			RlsFollowerProblemSolver rlsFollowerProblemSolver;
 			int followerIterationCount = 0;
@@ -132,9 +138,9 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int result = clientProblemSolver.leaderIncome;
 
-	std::cout << "Expected leader income: " << leaderIncome
-		<< "Exact leader income: " << result
-		<< "; Iteration count: " << iterationCount << std::endl;
+	//std::cout << "Expected leader income: " << leaderIncome
+		//<< "; Exact leader income: " << result
+		//<< "; Iteration count: " << iterationCount << std::endl;
 
 	return result;
 }
@@ -162,11 +168,12 @@ int RlsLeaderProblemSolver::RlsUpperProblemExactLower(const Instance& instance)
 		ivector leaderRecordPrices = leaderPrices;
 		int incomeRecord = leaderIncome;
 
-		int price = 0;
-		int facility = 0;
-		for (int i = 0; i < maxIterCount; ++i)
+		int k = 1;
+		SubsetIterator facilityIterator(instance.leaderFacilityCount, k);
+		std::vector<int> facilityPrices(k, 0);
+		while (!facilityIterator.End())
 		{
-			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, price, facility, instance);
+			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
 
 			FollowerCooperativeExactSolver _followerSolver(tmpLeaderPrices, instance);
 			ivector tmpFollowerPrices = _followerSolver.prices;
