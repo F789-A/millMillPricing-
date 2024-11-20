@@ -99,7 +99,8 @@ int main()
 
 		RlsLeaderProblemSolver solver;
 
-		auto ourAnswer = solver.VNDUpperProblem(1, instance);
+		auto inc = solver.VNDUpperProblem(1, instance);
+		std::cout << "Exact leader income: " << inc << std::endl;
 
 		auto stop = timer.now();
 
