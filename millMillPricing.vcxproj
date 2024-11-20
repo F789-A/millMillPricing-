@@ -156,6 +156,7 @@
     <ClCompile Include="RlsLeaderProblemSolver.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="SkipWrapper.cpp" />
+    <ClCompile Include="Subset.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientProblemSolver.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="RlsLeaderProblemSolver.h" />
     <ClInclude Include="RlsFollowerProblemSolver.h" />
     <ClInclude Include="SkipWrapper.h" />
+    <ClInclude Include="Subset.h" />
     <ClInclude Include="VectorCmp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

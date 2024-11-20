@@ -41,7 +41,7 @@ ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, int& pric
 	return result;
 }
 
-int RlsLeaderProblemSolver::RlsUpperProblem(const Instance& instance)
+int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& instance)
 {
 	//const int maxIterCount = 1000 * instance.leaderFacilityCount;
 	const int maxIterCount = std::accumulate(instance.pUpperBound.begin(), instance.pUpperBound.end(), 0);
