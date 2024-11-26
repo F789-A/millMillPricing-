@@ -60,6 +60,39 @@ ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vect
 	return result;
 }
 
+void RlsLeaderProblemSolver::PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo)
+{
+	for (auto l : leaderPrices)
+	{
+		std::cout << l << " ";
+	}
+	std::cout << std::endl;
+	for (auto l : followerPrices)
+	{
+		std::cout << l << " ";
+	}
+	std::cout << std::endl;
+	for (const auto& p : debInfo)
+	{
+		if (p.first != -1)
+		{
+			if (p.second)
+			{
+				std::cout << "l" << p.first << " ";
+			}
+			else
+			{
+				std::cout << "f" << p.first << " ";
+			}
+		}
+		else
+		{
+			std::cout << "u  ";
+		}
+	}
+	std::cout << std::endl;
+}
+
 int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& instance)
 {
 	ivector leaderPrices = GetFirst(instance, true);
@@ -72,32 +105,7 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 		<< std::setw(4) << "RInc;" << std::setw(4) << "FInc;" << std::endl;
 	std::cout << std::setw(3) << 0 << ";" << std::setw(4) << 0 << ";" << std::setw(4) << leaderIncome << ";" << std::setw(4) << followerSolver.income << ";" << std::endl;
 
-	for (auto l : leaderPrices)
-	{
-		std::cout << l << " ";
-	}
-	std::cout << std::endl;
-	for (auto l : followerPrices)
-	{
-		std::cout << l << " ";
-	}
-	std::cout << std::endl;
-	for (const auto& p : clientProblemSolver.debInfo)
-	{
-		if (p.second)
-		{
-			std::cout << "l" << p.first << " ";
-		}
-		else if (p.first != -1)
-		{
-			std::cout << "f" << p.first << " ";
-		}
-		else
-		{
-			std::cout << "u  ";
-		}
-	}
-	std::cout << std::endl;
+	PrintClientInfo(leaderPrices, followerPrices, clientProblemSolver.debInfo);
 
 	int iterationCount = 1;
 	int k = 1;
@@ -134,32 +142,7 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 			<< std::setw(4) << leaderIncomeOnRecord << ";" << std::setw(4) << followerSolverOnRecord.income << ";" 
 			<< " k = " << k << std::endl;
 
-		for (auto l : leaderRecordPrices)
-		{
-			std::cout << l << " ";
-		}
-		std::cout << std::endl;
-		for (auto l : followerPricesOnRecord)
-		{
-			std::cout << l << " ";
-		}
-		std::cout << std::endl;
-		for (const auto& p : clientProblemSolver.debInfo)
-		{
-			if (p.second)
-			{
-				std::cout << "l" << p.first << " ";
-			}
-			else if (p.first != -1)
-			{
-				std::cout << "f" << p.first << " ";
-			}
-			else 
-			{
-				std::cout << "u  ";
-			}
-		}
-		std::cout << std::endl;
+		PrintClientInfo(leaderPrices, followerPrices, clientProblemSolver.debInfo);
 
 		if (leaderIncomeOnRecord > leaderIncome)
 		{

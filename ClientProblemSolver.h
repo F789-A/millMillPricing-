@@ -8,5 +8,5 @@ public:
 
 	int leaderIncome;
 	int followerIncome;
-	std::vector<std::pair<bool, int>> debInfo;
+	std::vector<std::pair<int, bool>> debInfo;
 };

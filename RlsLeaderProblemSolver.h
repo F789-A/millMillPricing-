@@ -28,5 +28,7 @@ public:
 	int VNDUpperProblem(int FlipCount, const Instance& instance);
 	int RlsUpperProblemExactLower(const Instance& instance);
 
+	void PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo);
+
 	ClientProblemSolver clientProblemSolver;
 };
