@@ -141,13 +141,12 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 		std::cout << std::setw(3) << iterationCount << ";" << std::setw(4) << incomeRecord << ";"
 			<< std::setw(4) << leaderIncomeOnRecord << ";" << std::setw(4) << followerSolverOnRecord.income << ";" 
 			<< " k = " << k << std::endl;
-
-		PrintClientInfo(leaderPrices, followerPrices, clientProblemSolver.debInfo);
+		PrintClientInfo(leaderRecordPrices, followerPricesOnRecord, clientProblemSolver.debInfo);
 
 		if (leaderIncomeOnRecord > leaderIncome)
 		{
 			leaderPrices = leaderRecordPrices;
-			leaderIncome = incomeRecord;
+			leaderIncome = leaderIncomeOnRecord;
 			followerPrices = followerPricesOnRecord;
 			k = 1;
 		}
