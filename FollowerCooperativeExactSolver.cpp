@@ -2,6 +2,7 @@
 #include "FollowerExactSolver.h"
 
 #include "ClientProblemSolver.h"
+#include "Subset.h"
 
 #include <iomanip>
 #include <iostream>
@@ -208,12 +209,13 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	SCIP_SOL* sol = nullptr;
 	sol = SCIPgetBestSol(scip);
 
+	leaderIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
 	//puck data
 	income = targetIncome;
 	prices.resize(instance.followerFacilityCount);
 	for (int i = 0; i < instance.followerFacilityCount; ++i)
 	{
-		prices[i] = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
+		prices[i] = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
 	}
 
 	if (debug)
@@ -223,7 +225,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
-				double z = std::round(SCIPgetSolVal(scip, sol, z_ij[toIdx(i, j)]));
+				double z = std::lround(SCIPgetSolVal(scip, sol, z_ij[toIdx(i, j)]));
 				std::cout << std::setw(3) << z;
 			}
 			std::cout << std::endl;
@@ -233,7 +235,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
-				double x = std::round(SCIPgetSolVal(scip, sol, x_ij[toIdx(i, j)]));
+				double x = std::lround(SCIPgetSolVal(scip, sol, x_ij[toIdx(i, j)]));
 				std::cout << std::setw(3) << x;
 			}
 			std::cout << std::endl;
@@ -241,14 +243,14 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		std::cout << std::endl;
 		for (int i = 0; i < instance.followerFacilityCount; ++i)
 		{
-			int p = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
+			int p = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
 			std::cout << std::setw(3) << p;
 		}
 		std::cout << std::endl;
 		std::cout << "--------------------------------------------------" << std::endl;
 	}
 
-	int leaderIncome = std::round(SCIPgetSolOrigObj(scip, sol));
+	int leaderIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
 	ClientProblemSolver cps;
 	cps.Solve(leaderPrices, prices, instance);
 	assert(cps.leaderIncome == leaderIncome);
@@ -302,4 +304,39 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 FollowerCooperativeExactSolver::FollowerCooperativeExactSolver(const ivector& leaderPrices, const Instance& instance)
 {
 	SolveProblem(leaderPrices, instance);
+}
+
+FollowerCooperativeExactSolverStable::FollowerCooperativeExactSolverStable(const ivector& leaderPrices, const ivector& prevFollowerPrices,  const Instance& instance)
+{
+	SolveProblem(leaderPrices, prevFollowerPrices, instance);
+}
+
+SCIP_RETCODE FollowerCooperativeExactSolverStable::SolveProblem(const ivector& leaderPrices, const ivector& prevFollowerPrices, const Instance& instance)
+{
+	FollowerCooperativeExactSolver _followerCooperativeExactSolver(leaderPrices, instance);
+	income = _followerCooperativeExactSolver.income;
+	prices = _followerCooperativeExactSolver.prices;
+
+	ClientProblemSolver cps;
+	for (int i = 1; i <= instance.followerFacilityCount; ++i)
+	{
+		SubsetIterator iter(instance.followerFacilityCount, i);
+
+		for (; !iter.End(); ++iter)
+		{
+			ivector newPrices = _followerCooperativeExactSolver.prices;
+			for (auto l : *iter)
+			{
+				newPrices[l] = prevFollowerPrices[l];
+			}
+			cps.Solve(leaderPrices, newPrices, instance);
+
+			if (cps.leaderIncome == _followerCooperativeExactSolver.leaderIncome
+				&& cps.followerIncome == _followerCooperativeExactSolver.income)
+			{
+				prices = newPrices;
+			}
+		}
+
+	}
 }

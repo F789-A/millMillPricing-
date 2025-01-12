@@ -146,11 +146,11 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 	SCIP_SOL* sol = SCIPgetBestSol(scip);
 
 	//puck data
-	income = std::round(SCIPgetSolOrigObj(scip, sol));
+	income = std::lround(SCIPgetSolOrigObj(scip, sol));
 	prices.resize(instance.followerFacilityCount);
 	for (int i = 0; i < instance.followerFacilityCount; ++i)
 	{
-		prices[i] = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
+		prices[i] = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
 	}
 
 	if (debug)
@@ -160,7 +160,7 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
-				double z = std::round(SCIPgetSolVal(scip, sol, z_ij[i][j]));
+				double z = std::lround(SCIPgetSolVal(scip, sol, z_ij[i][j]));
 				std::cout << std::setw(3) << z;
 			}
 			std::cout << std::endl;
@@ -170,7 +170,7 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 		{
 			for (int j = 0; j < instance.clientsCount; ++j)
 			{
-				double x = std::round(SCIPgetSolVal(scip, sol, x_ij[i][j]));
+				double x = std::lround(SCIPgetSolVal(scip, sol, x_ij[i][j]));
 				std::cout << std::setw(3) << x;
 			}
 			std::cout << std::endl;
@@ -178,7 +178,7 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 		std::cout << std::endl;
 		for (int i = 0; i < instance.followerFacilityCount; ++i)
 		{
-			int p = std::round(SCIPgetSolVal(scip, sol, p_i[i]));
+			int p = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
 			std::cout << std::setw(3) << p;
 		}
 		std::cout << std::endl;

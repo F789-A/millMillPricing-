@@ -14,6 +14,22 @@ private:
 	const bool debug = false;
 
 public:
-	float income;
+	int leaderIncome;
+	int income;
+	ivector prices;
+};
+
+class FollowerCooperativeExactSolverStable
+{
+public:
+	FollowerCooperativeExactSolverStable(const ivector& leaderPrices, const ivector& prevFollowerPrices, const Instance& instance);
+
+public:
+	SCIP_RETCODE SolveProblem(const ivector& leaderPrices, const ivector& prevFollowerPrices, const Instance& instance);
+
+	const bool debug = false;
+
+public:
+	int income;
 	ivector prices;
 };

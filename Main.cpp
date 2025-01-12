@@ -68,7 +68,6 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip, int c
 
 int main()
 {
-	std::ofstream out("C:/Workflow/Cpp/millMillPricing/result.txt");
 	std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
 
 	std::vector<std::string> testPaths;
@@ -78,8 +77,8 @@ int main()
 	}
 	int i = 0;
 	std::set<int> ignoreList;
-	//ignoreList.insert(0);
-	//ignoreList.insert(1);
+	ignoreList.insert(0);
+	ignoreList.insert(1);
 	for (const auto& inputFile : testPaths)
 	{
 		if (ignoreList.contains(i))
@@ -96,18 +95,14 @@ int main()
 		std::chrono::high_resolution_clock timer;
 		auto start = timer.now();
 
-
 		RlsLeaderProblemSolver solver;
 
-		auto inc = solver.VNDUpperProblem(1, instance);
+		auto inc = solver.LSUpperProblemExactLower(instance);
 		std::cout << "Exact leader income: " << inc << std::endl;
 
 		auto stop = timer.now();
+		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
 
-		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() / 1000000.0f;
-
-
-		//std::cout << "Result: " << ourAnswer << std::endl;
 		std::cout << "Time: " << deltaTime << std::endl;
 
 		HighPointRelaxation relax;
@@ -116,9 +111,7 @@ int main()
 
 		std::cout << "----------------------------------------------" << std::endl;
 
-		//out << "Test file: " << inputFile << std::endl;
-		//out << "Result: " << ourAnswer << std::endl;
-		//out << "Time: " << deltaTime << std::endl;
+		break;
 	}
 
 	return 0;

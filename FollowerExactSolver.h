@@ -11,6 +11,6 @@ public:
 	const bool debug = false;
 
 public:
-	float income;
+	int income;
 	ivector prices;
 };
