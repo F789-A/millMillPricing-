@@ -12,20 +12,22 @@
 
 #include "FollowerExactSolver.h"
 #include "FollowerCooperativeExactSolver.h"
-#include "VectorCmp.h"
+#include "VNDFollowerProblemSolver.h"
 #include "ClientProblemSolver.h"
-
 #include "Subset.h"
 
-class RlsFollowerProblemSolver
+class VNDLeaderProblemSolver
 {
 public:
 	ivector GetFirst(const Instance& instance, bool upper);
 	ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance);
-	ivector GetFromFlip(const ivector& startPrice, int& price, int& facility, const Instance& instance);
 	ivector GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
 		SubsetIterator& facilityIter, const Instance& instance);
-	ivector RlsLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance);
+
+	int VNDUpperProblem(int FlipCount, const Instance& instance);
+	int LSUpperProblemExactLower(const Instance& instance);
+
+	void PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo);
 
 	ClientProblemSolver clientProblemSolver;
 };

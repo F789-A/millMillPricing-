@@ -1,6 +1,6 @@
-#include "RlsLeaderProblemSolver.h"
+#include "VNDLeaderProblemSolver.h"
 
-ivector RlsLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
+ivector VNDLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
 {
 	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
 	for (auto& l : result)
@@ -10,7 +10,7 @@ ivector RlsLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
 	return result;
 }
 
-ivector RlsLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, const Instance& instance)
+ivector VNDLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, const Instance& instance)
 {
 	static std::seed_seq seed_w({ 123123 });
 	static auto random_generator = std::mt19937(seed_w);
@@ -28,7 +28,7 @@ ivector RlsLeaderProblemSolver::GetRandomFromFlip(const ivector& startPrice, con
 	return result;
 }
 
-ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, 
+ivector VNDLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, 
 	SubsetIterator& facilityIter, const Instance& instance)
 {
 	ivector result = startPrice;
@@ -60,7 +60,7 @@ ivector RlsLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vect
 	return result;
 }
 
-void RlsLeaderProblemSolver::PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo)
+void VNDLeaderProblemSolver::PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo)
 {
 	for (auto l : leaderPrices)
 	{
@@ -93,7 +93,7 @@ void RlsLeaderProblemSolver::PrintClientInfo(const ivector& leaderPrices, const 
 	std::cout << std::endl;
 }
 
-int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& instance)
+int VNDLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& instance)
 {
 	ivector leaderPrices = GetFirst(instance, true);
 	FollowerCooperativeExactSolver followerSolver(leaderPrices, instance);
@@ -122,7 +122,7 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 		{
 			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
 
-			RlsFollowerProblemSolver rlsFollowerProblemSolver;
+			VNDFollowerProblemSolver rlsFollowerProblemSolver;
 			int followerIterationCount = 0;
 			ivector tmpFollowerPrices = rlsFollowerProblemSolver.RlsLowerProblem(followerPrices, tmpLeaderPrices, 2, instance);
 
@@ -166,7 +166,7 @@ int RlsLeaderProblemSolver::VNDUpperProblem(int FlipCount, const Instance& insta
 	return result;
 }
 
-int RlsLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance)
+int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance)
 {
 	std::ofstream out("C:/Workflow/Cpp/millMillPricing/resultGrapgics.txt");
 

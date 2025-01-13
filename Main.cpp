@@ -5,10 +5,10 @@
 
 #include "Instance.h"
 
-#include "RlsLeaderProblemSolver.h"
+#include "VNDLeaderProblemSolver.h"
 #include "HighPointRelaxation.h"
 
-Instance ReadInstance(const std::string& path, float leaderPart, int clip, int clipClients)
+Instance ReadInstance(const std::string& path, int leaderFacilityCount, int followerCount, int clientCount)
 {
 	std::ifstream file(path);
 
@@ -20,45 +20,42 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip, int c
 	file >> n;
 	file >> r;
 
-	int M = std::min(clip, m);
+	assert(leaderFacilityCount + followerCount <= m && clientCount <= n);
 
-	int m1 = static_cast<int>(static_cast<float>(M) * leaderPart);
-	int m2 = M - m1;
-	int n_r = std::min(n, clipClients);
 	int f;
-	table costsLeader = table(m1, ivector(n_r));
-	for (int i = 0; i < m1; ++i)
+	table costsLeader = table(leaderFacilityCount, ivector(clientCount));
+	for (int i = 0; i < leaderFacilityCount; ++i)
 	{
-		for (int j = 0; j < n_r; ++j)
+		for (int j = 0; j < clientCount; ++j)
 		{
 			file >> costsLeader[i][j];
 		}
-		for (int j = n_r; j < n; ++j)
+		for (int j = clientCount; j < n; ++j)
 		{
 			file >> f;
 		}
 	}
-	table costsFollower = table(m2, ivector(n_r));
-	for (int i = 0; i < m2; ++i)
+	table costsFollower = table(followerCount, ivector(clientCount));
+	for (int i = 0; i < followerCount; ++i)
 	{
-		for (int j = 0; j < n_r; ++j)
+		for (int j = 0; j < clientCount; ++j)
 		{
 			file >> costsFollower[i][j];
 		}
-		for (int j = n_r; j < n; ++j)
+		for (int j = clientCount; j < n; ++j)
 		{
 			file >> f;
 		}
 	}
-	for (int i = 0; i < std::max(m - M, 0); ++i)
+	for (int i = 0; i < m - (leaderFacilityCount + followerCount); ++i)
 	{
 		for (int j = 0; j < n; ++j)
 		{
 			file >> f;
 		}
 	}
-	ivector budgets = ivector(n_r);
-	for (int j = 0; j < n_r; ++j)
+	ivector budgets = ivector(clientCount);
+	for (int j = 0; j < clientCount; ++j)
 	{
 		file >> budgets[j];
 	}
@@ -68,26 +65,28 @@ Instance ReadInstance(const std::string& path, float leaderPart, int clip, int c
 
 int main()
 {
-	std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
-
-	std::vector<std::string> testPaths;
-	for (const auto& entry : std::filesystem::directory_iterator(path))
+	std::vector<std::string> testPaths
 	{
-		testPaths.push_back(entry.path().string());
-	}
-	int i = 0;
-	std::set<int> ignoreList;
-	ignoreList.insert(0);
-	ignoreList.insert(1);
+		"examples/FLPr_100_100_01.txt",
+		"examples/FLPr_100_100_02.txt",
+		"examples/FLPr_100_100_03.txt",
+		"examples/FLPr_100_100_04.txt",
+		"examples/FLPr_100_100_05.txt",
+		"examples/FLPr_100_100_06.txt",
+		"examples/FLPr_100_100_07.txt",
+		"examples/FLPr_100_100_08.txt",
+		"examples/FLPr_100_100_09.txt",
+		"examples/FLPr_100_100_10.txt",
+	};
+
+	//std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
+	//for (const auto& entry : std::filesystem::directory_iterator(path))
+	//{
+		//testPaths.push_back(entry.path().string());
+	//}
+
 	for (const auto& inputFile : testPaths)
 	{
-		if (ignoreList.contains(i))
-		{
-			i++;
-			continue;
-		}
-		++i;
-
 		std::cout << "Test file: " << inputFile << std::endl;
 
 		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);
@@ -95,7 +94,7 @@ int main()
 		std::chrono::high_resolution_clock timer;
 		auto start = timer.now();
 
-		RlsLeaderProblemSolver solver;
+		VNDLeaderProblemSolver solver;
 
 		auto inc = solver.LSUpperProblemExactLower(instance);
 		std::cout << "Exact leader income: " << inc << std::endl;

@@ -27,10 +27,10 @@
     <ClCompile Include="FollowerCooperativeExactSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RlsFollowerProblemSolver.cpp">
+    <ClCompile Include="VNDFollowerProblemSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RlsLeaderProblemSolver.cpp">
+    <ClCompile Include="VNDLeaderProblemSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ClientProblemSolver.cpp">
@@ -56,13 +56,10 @@
     <ClInclude Include="FollowerCooperativeExactSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="RlsLeaderProblemSolver.h">
+    <ClInclude Include="VNDLeaderProblemSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="VectorCmp.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RlsFollowerProblemSolver.h">
+    <ClInclude Include="VNDFollowerProblemSolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ClientProblemSolver.h">

@@ -1,8 +1,8 @@
-#include "RlsFollowerProblemSolver.h"
+#include "VNDFollowerProblemSolver.h"
 
 #include "Subset.h"
 
-ivector RlsFollowerProblemSolver::GetFirst(const Instance& instance, bool upper)
+ivector VNDFollowerProblemSolver::GetFirst(const Instance& instance, bool upper)
 {
 	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
 	for (auto& l : result)
@@ -12,7 +12,7 @@ ivector RlsFollowerProblemSolver::GetFirst(const Instance& instance, bool upper)
 	return result;
 }
 
-ivector RlsFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, const Instance& instance)
+ivector VNDFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, const Instance& instance)
 {
 	static std::seed_seq seed_w({ 123123 });
 	static auto random_generator = std::mt19937(seed_w);
@@ -29,7 +29,7 @@ ivector RlsFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, c
 	return result;
 }
 
-ivector RlsFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
+ivector VNDFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
 	SubsetIterator& facilityIter, const Instance& instance)
 {
 	ivector result = startPrice;
@@ -61,7 +61,7 @@ ivector RlsFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::ve
 	return result;
 }
 
-ivector RlsFollowerProblemSolver::RlsLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance)
+ivector VNDFollowerProblemSolver::RlsLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance)
 {
 	ivector followerPrices = first;
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
