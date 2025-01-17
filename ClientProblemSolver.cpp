@@ -6,7 +6,6 @@ void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& follo
 {
 	leaderIncome = 0;
 	followerIncome = 0;
-	debInfo.clear();
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
 		int leaderBestFacility = -1;
@@ -38,16 +37,29 @@ void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& follo
 		if (minLeaderCost <= minFollowerCost && leaderBestFacility >= 0)
 		{
 			leaderIncome += leaderPrice[leaderBestFacility];
-			debInfo.push_back({ leaderBestFacility, true});
+			if (debug)
+			{
+				std::cout << "l" << leaderBestFacility << " ";
+			}
 		}
 		else if (minLeaderCost > minFollowerCost && followerBestFacility >= 0)
 		{
 			followerIncome += followerPrice[followerBestFacility];
-			debInfo.push_back({ followerBestFacility, false });
+			if (debug)
+			{
+				std::cout << "f" << followerBestFacility << " ";
+			}
 		}
 		else
 		{
-			debInfo.push_back({ -1, true });
+			if (debug)
+			{
+				std::cout << "-- ";
+			}
 		}
+	}
+	if (debug)
+	{
+		std::cout << std::endl;
 	}
 }

@@ -3,14 +3,19 @@
 #include <scip/scipdefplugins.h>
 #include "Instance.h"
 
+struct FollowerSolution
+{
+	int followerIncome;
+	ivector followerPrices;
+};
+
 class FollowerExactSolver
 {
 public:
-	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance);
+	FollowerSolution Solve(const ivector& leaderPrices, const Instance& instance);
 
-	const bool debug = false;
+	bool debug = false;
 
-public:
-	int income;
-	ivector prices;
+private:
+	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerSolution& output);
 };

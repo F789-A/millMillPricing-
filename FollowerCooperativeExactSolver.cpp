@@ -1,14 +1,18 @@
 #include "FollowerCooperativeExactSolver.h"
-#include "FollowerExactSolver.h"
 
-#include "ClientProblemSolver.h"
 #include "Subset.h"
 
 #include <iomanip>
 #include <iostream>
 
+FollowerCooperativeExactOutput FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance)
+{
+	FollowerCooperativeExactOutput output;
+	Solve(leaderPrices, instance, output);
+	return output;
+}
 
-SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderPrices, const Instance& instance)
+SCIP_RETCODE FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output)
 {
 	auto toIdx = [&instance](int i, int j)
 	{
@@ -35,15 +39,13 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		upperBounds.push_back(instance.qUpperBound[i]);
 	}
 
-	FollowerExactSolver solver;
-	solver.Solve(leaderPrices, instance);
-	int targetIncome = solver.income;
+	auto rowSol = followerExactSolver.Solve(leaderPrices, instance);
+	int targetIncome = rowSol.followerIncome;
 
 	SCIP* scip = nullptr;
 	SCIP_CALL(SCIPcreate(&scip));
-	SCIP_CALL(SCIPincludeDefaultPlugins(scip)); //  include default plugins
+	SCIP_CALL(SCIPincludeDefaultPlugins(scip));
 	SCIPsetMessagehdlrQuiet(scip, true);
-
 	SCIP_CALL(SCIPcreateProbBasic(scip, "lowerCooperative"));
 	SCIP_CALL(SCIPsetObjsense(scip, SCIP_OBJSENSE_MAXIMIZE));
 
@@ -175,7 +177,6 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		SCIP_CALL(SCIPaddCons(scip, constr6[j]));
 	}
 
-	//запрещаем кооперацию с последователем
 	ivector leaderBestOffer(instance.clientsCount, std::numeric_limits<int>::max());
 	for (int j = 0; j < instance.clientsCount; ++j)
 	{
@@ -195,7 +196,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		{
 			continue;
 		}
-		for (int i = instance.followerFacilityCount; i < facilityCount; ++i)
+		for (int i = instance.leaderFacilityCount; i < facilityCount; ++i)
 		{
 			SCIP_CONS* constr = nullptr;
 			SCIP_CALL(SCIPcreateConsBasicLinear(scip, &constr, "", 0, nullptr, nullptr, -SCIPinfinity(scip), std::max(0, leaderBestOffer[j] - costs[i][j] - 1)));
@@ -209,13 +210,13 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	SCIP_SOL* sol = nullptr;
 	sol = SCIPgetBestSol(scip);
 
-	leaderIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
 	//puck data
-	income = targetIncome;
-	prices.resize(instance.followerFacilityCount);
+	output.leaderIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
+	output.followerIncome = targetIncome;
+	output.followerPrices.resize(instance.followerFacilityCount);
 	for (int i = 0; i < instance.followerFacilityCount; ++i)
 	{
-		prices[i] = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
+		output.followerPrices[i] = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
 	}
 
 	if (debug)
@@ -250,10 +251,10 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 		std::cout << "--------------------------------------------------" << std::endl;
 	}
 
-	int leaderIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
 	ClientProblemSolver cps;
-	cps.Solve(leaderPrices, prices, instance);
-	assert(cps.leaderIncome == leaderIncome);
+	cps.Solve(leaderPrices, output.followerPrices, instance);
+	assert(cps.leaderIncome == output.leaderIncome);
+	assert(cps.followerIncome == output.followerIncome);
 
 	SCIP_CALL(SCIPreleaseCons(scip, &mainConstr));
 	for (auto& l : constr1)
@@ -301,12 +302,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::SolveProblem(const ivector& leaderP
 	return SCIP_OKAY;
 }
 
-FollowerCooperativeExactSolver::FollowerCooperativeExactSolver(const ivector& leaderPrices, const Instance& instance)
-{
-	SolveProblem(leaderPrices, instance);
-}
-
-FollowerCooperativeExactSolverStable::FollowerCooperativeExactSolverStable(const ivector& leaderPrices, const ivector& prevFollowerPrices,  const Instance& instance)
+/*FollowerCooperativeExactSolverStable::FollowerCooperativeExactSolverStable(const ivector& leaderPrices, const ivector& prevFollowerPrices, const Instance& instance)
 {
 	SolveProblem(leaderPrices, prevFollowerPrices, instance);
 }
@@ -339,4 +335,4 @@ SCIP_RETCODE FollowerCooperativeExactSolverStable::SolveProblem(const ivector& l
 		}
 
 	}
-}
+}*/

@@ -24,10 +24,11 @@ public:
 	ivector GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
 		SubsetIterator& facilityIter, const Instance& instance);
 
-	int VNDUpperProblem(int FlipCount, const Instance& instance);
+	int VNDUpperProblem(int FlipCount, int FollowerFlipCount, const Instance& instance);
 	int LSUpperProblemExactLower(const Instance& instance);
 
-	void PrintClientInfo(const ivector& leaderPrices, const ivector& followerPrices, const std::vector<std::pair<int, bool>>& debInfo);
-
 	ClientProblemSolver clientProblemSolver;
+	FollowerCooperativeExactSolver followerProblemSolver;
+	VNDFollowerProblemSolver vndFollowerProblemSolver;
+	//FollowerCooperativeExactSolverStable
 };

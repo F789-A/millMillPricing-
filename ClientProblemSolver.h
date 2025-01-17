@@ -8,5 +8,6 @@ public:
 
 	int leaderIncome;
 	int followerIncome;
-	std::vector<std::pair<int, bool>> debInfo;
+
+	bool debug = false;
 };

@@ -155,7 +155,6 @@
     <ClCompile Include="VNDFollowerProblemSolver.cpp" />
     <ClCompile Include="VNDLeaderProblemSolver.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="SkipWrapper.cpp" />
     <ClCompile Include="Subset.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -166,7 +165,6 @@
     <ClInclude Include="FollowerExactSolver.h" />
     <ClInclude Include="VNDLeaderProblemSolver.h" />
     <ClInclude Include="VNDFollowerProblemSolver.h" />
-    <ClInclude Include="SkipWrapper.h" />
     <ClInclude Include="Subset.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

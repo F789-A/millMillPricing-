@@ -3,23 +3,30 @@
 #include <scip/scipdefplugins.h>
 #include "Instance.h"
 
+#include "FollowerExactSolver.h"
+#include "ClientProblemSolver.h"
+
+struct FollowerCooperativeExactOutput
+{
+	int leaderIncome;
+	int followerIncome;
+	ivector followerPrices;
+};
+
 class FollowerCooperativeExactSolver
 {
 public:
-	FollowerCooperativeExactSolver(const ivector& leaderPrices, const Instance& instance);
+	FollowerCooperativeExactOutput Solve(const ivector& leaderPrices, const Instance& instance);
 
 private:
-	SCIP_RETCODE SolveProblem(const ivector& leaderPrices, const Instance& instance);
+	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output);
 
 	const bool debug = false;
 
-public:
-	int leaderIncome;
-	int income;
-	ivector prices;
+	FollowerExactSolver followerExactSolver;
 };
 
-class FollowerCooperativeExactSolverStable
+/*class FollowerCooperativeExactSolverStable
 {
 public:
 	FollowerCooperativeExactSolverStable(const ivector& leaderPrices, const ivector& prevFollowerPrices, const Instance& instance);
@@ -32,4 +39,4 @@ public:
 public:
 	int income;
 	ivector prices;
-};
+};*/

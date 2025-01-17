@@ -61,7 +61,7 @@ ivector VNDFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::ve
 	return result;
 }
 
-ivector VNDFollowerProblemSolver::RlsLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance)
+ivector VNDFollowerProblemSolver::VNDLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance)
 {
 	ivector followerPrices = first;
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);

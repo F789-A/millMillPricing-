@@ -36,9 +36,6 @@
     <ClCompile Include="ClientProblemSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SkipWrapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HighPointRelaxation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -63,9 +60,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ClientProblemSolver.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SkipWrapper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="HighPointRelaxation.h">

@@ -67,16 +67,16 @@ int main()
 {
 	std::vector<std::string> testPaths
 	{
-		"examples/FLPr_100_100_01.txt",
+		//"examples/FLPr_100_100_01.txt",
 		"examples/FLPr_100_100_02.txt",
-		"examples/FLPr_100_100_03.txt",
-		"examples/FLPr_100_100_04.txt",
-		"examples/FLPr_100_100_05.txt",
-		"examples/FLPr_100_100_06.txt",
-		"examples/FLPr_100_100_07.txt",
-		"examples/FLPr_100_100_08.txt",
-		"examples/FLPr_100_100_09.txt",
-		"examples/FLPr_100_100_10.txt",
+		//"examples/FLPr_100_100_03.txt",
+		//"examples/FLPr_100_100_04.txt",
+		//"examples/FLPr_100_100_05.txt",
+		//"examples/FLPr_100_100_06.txt",
+		//"examples/FLPr_100_100_07.txt",
+		//"examples/FLPr_100_100_08.txt",
+		//"examples/FLPr_100_100_09.txt",
+		//"examples/FLPr_100_100_10.txt",
 	};
 
 	//std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
@@ -84,33 +84,50 @@ int main()
 	//{
 		//testPaths.push_back(entry.path().string());
 	//}
+	std::vector<int> leaderFacCount{2, 5, 10};
+	std::vector<int> followerFacCount{ 2, 5, 10};
+	std::vector<int> clientCount{ 100 };
+	HighPointRelaxation relax;
+	VNDLeaderProblemSolver solver;
+	std::chrono::high_resolution_clock timer;
 
 	for (const auto& inputFile : testPaths)
 	{
 		std::cout << "Test file: " << inputFile << std::endl;
 
-		Instance instance = ReadInstance(inputFile, 0.5f, 10, 30);
+		for (auto clCount : clientCount)
+		{
+			for (auto lfc : leaderFacCount)
+			{
+				for (auto ffc : followerFacCount)
+				{
+					std::cout << clCount << " " << lfc << " " << ffc << std::endl;
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
 
-		std::chrono::high_resolution_clock timer;
-		auto start = timer.now();
+					auto start = timer.now();
+					relax.Solve(instance);
+					auto res = relax.income;
+					auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
+					std::cout << "HighPointRelaxation: " << res << " " << deltaTime << std::endl;
 
-		VNDLeaderProblemSolver solver;
+					start = timer.now();
+					res = solver.VNDUpperProblem(1, 1, instance);
+					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
+					std::cout << "vnd_1_1: " << res  << " " << deltaTime << std::endl;
 
-		auto inc = solver.LSUpperProblemExactLower(instance);
-		std::cout << "Exact leader income: " << inc << std::endl;
+					start = timer.now();
+					res = solver.VNDUpperProblem(1, 2, instance);
+					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
+					std::cout << "vnd_1_2: " << res << " " << deltaTime << std::endl;
 
-		auto stop = timer.now();
-		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
+					start = timer.now();
+					res = solver.VNDUpperProblem(2, 1, instance);
+					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
+					std::cout << "vnd_2_1: " << res << " " << deltaTime << std::endl;
+				}
+			}
 
-		std::cout << "Time: " << deltaTime << std::endl;
-
-		HighPointRelaxation relax;
-		relax.Solve(instance);
-		std::cout << "HighPointRelaxation: " << relax.income << std::endl;
-
-		std::cout << "----------------------------------------------" << std::endl;
-
-		break;
+		}
 	}
 
 	return 0;
