@@ -60,12 +60,16 @@ ivector VNDLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vect
 	return result;
 }
 
-int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance)
+int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, bool& ended)
 {
+	ended = false;
 	ivector leaderPrices = GetFirst(instance, true);
 	auto followerSolution = followerProblemSolver.Solve(leaderPrices, instance);
 	ivector followerPrices = std::move(followerSolution.followerPrices);
 	int leaderIncome = followerSolution.leaderIncome;
+
+	std::chrono::high_resolution_clock timer;
+	auto startTime = timer.now();
 
 	//std::cout << std::setw(3) << 0 << ";" << std::setw(4) << 0 << ";" << std::setw(4) << leaderIncome << ";" << std::setw(4) << "0"  
 	//	<< ";" << std::setw(4) << followerSolution.followerIncome  << std::endl;
@@ -114,6 +118,12 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 		else
 		{
 			++k;
+		}
+		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - startTime).count() / 1000000.0f;
+		if (deltaTime > 3600)
+		{
+			ended = true;
+			break;
 		}
 	}
 

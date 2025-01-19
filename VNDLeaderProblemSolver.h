@@ -24,7 +24,7 @@ public:
 	ivector GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
 		SubsetIterator& facilityIter, const Instance& instance);
 
-	int VNDUpperProblem(int FlipCount, int FollowerFlipCount, const Instance& instance);
+	int VNDUpperProblem(int FlipCount, int FollowerFlipCount, const Instance& instance, bool& ended);
 	int LSUpperProblemExactLower(const Instance& instance);
 
 	ClientProblemSolver clientProblemSolver;
