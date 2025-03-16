@@ -9,6 +9,7 @@
 #include "HighPointRelaxation.h"
 #include "LowerBoundMD.h"
 #include "LowerBoundUM.h"
+#include "VNDFollowerProblemSolver.h"
 
 Instance ReadInstance(const std::string& path, int leaderFacilityCount, int followerCount, int clientCount)
 {
@@ -69,30 +70,30 @@ int main()
 {
 	std::vector<std::string> testPaths
 	{
-		"examples/FLPr_100_100_01.txt",
-		"examples/FLPr_100_100_02.txt",
-		"examples/FLPr_100_100_03.txt",
-		"examples/FLPr_100_100_04.txt",
-		"examples/FLPr_100_100_05.txt",
-		"examples/FLPr_100_100_06.txt",
-		"examples/FLPr_100_100_07.txt",
-		"examples/FLPr_100_100_08.txt",
-		"examples/FLPr_100_100_09.txt",
-		"examples/FLPr_100_100_10.txt",
-		/*"examplesNew/FLPr_100_100_0.txt",
-		"examplesNew/FLPr_100_100_1.txt",
-		"examplesNew/FLPr_100_100_2.txt",
-		"examplesNew/FLPr_100_100_3.txt",
-		"examplesNew/FLPr_100_100_4.txt",
-		"examplesNew/FLPr_100_100_5.txt",
-		"examplesNew/FLPr_100_100_6.txt",
-		"examplesNew/FLPr_100_100_7.txt",
-		"examplesNew/FLPr_100_100_8.txt",
-		"examplesNew/FLPr_100_100_9.txt",
-		*/
+"examples/FLPr_100_100_01.txt",
+"examples/FLPr_100_100_02.txt",
+"examples/FLPr_100_100_03.txt",
+"examples/FLPr_100_100_04.txt",
+"examples/FLPr_100_100_05.txt",
+"examples/FLPr_100_100_06.txt",
+"examples/FLPr_100_100_07.txt",
+"examples/FLPr_100_100_08.txt",
+"examples/FLPr_100_100_09.txt",
+"examples/FLPr_100_100_10.txt",
+/*"examplesNew/FLPr_100_100_0.txt",
+"examplesNew/FLPr_100_100_1.txt",
+"examplesNew/FLPr_100_100_2.txt",
+"examplesNew/FLPr_100_100_3.txt",
+"examplesNew/FLPr_100_100_4.txt",
+"examplesNew/FLPr_100_100_5.txt",
+"examplesNew/FLPr_100_100_6.txt",
+"examplesNew/FLPr_100_100_7.txt",
+"examplesNew/FLPr_100_100_8.txt",
+"examplesNew/FLPr_100_100_9.txt",
+*/
 	};
 	std::vector<int> leaderFacCount{ 2, 5, 10, 20 };
-	std::vector<int> followerFacCount{ 2, 5, 10};
+	std::vector<int> followerFacCount{ 2, 5, 10 };
 	std::vector<int> clientCount{ 30 };
 	HighPointRelaxation relax;
 	LowerBoundMD lowerBoundMD;
@@ -165,8 +166,6 @@ int main()
 			}
 		}
 	}*/
-
-
 
 	for (const auto& inputFile : testPaths)
 	{

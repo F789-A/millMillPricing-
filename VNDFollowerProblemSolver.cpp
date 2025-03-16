@@ -5,6 +5,13 @@
 FlipIterator::FlipIterator(const ivector& startPrice, const int k, const ivector& upperBound)
 	: subsetIterator(startPrice.size(), k), startPrice(startPrice), current(startPrice), upperBounds(upperBound)
 {
+	const std::vector<int>& facilities = *subsetIterator;
+
+	for (auto k : facilities)
+	{
+		current[k] = 0;
+	}
+
 }
 
 FlipIterator& FlipIterator::operator++()
