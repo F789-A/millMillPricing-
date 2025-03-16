@@ -37,6 +37,7 @@ class VNDFollowerProblemSolver
 {
 public:
 	ivector VNDLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance);
+	ivector VNDLowerProblemFirstImprove(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance);
 	ivector SearchLowerProblem(const ivector& leaderPrices, const Instance& instance);
 
 	ClientProblemSolver clientProblemSolver;

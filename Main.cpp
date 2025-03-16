@@ -9,7 +9,6 @@
 #include "HighPointRelaxation.h"
 #include "LowerBoundMD.h"
 #include "LowerBoundUM.h"
-#include "ExampleGenerator.h"
 
 Instance ReadInstance(const std::string& path, int leaderFacilityCount, int followerCount, int clientCount)
 {
@@ -92,17 +91,18 @@ int main()
 		"examplesNew/FLPr_100_100_9.txt",
 		*/
 	};
-	std::vector<int> leaderFacCount{ 50 };
-	std::vector<int> followerFacCount{ 2, 5};
-	std::vector<int> clientCount{ 60 };
+	std::vector<int> leaderFacCount{ 2, 5, 10, 20 };
+	std::vector<int> followerFacCount{ 2, 5, 10};
+	std::vector<int> clientCount{ 30 };
 	HighPointRelaxation relax;
 	LowerBoundMD lowerBoundMD;
 	LowerBoundUM lowerBoundUM;
 	VNDLeaderProblemSolver solver;
 	std::chrono::high_resolution_clock timer;
+	std::chrono::milliseconds timeLimit(3600 * 1000);
 
-	std::cout << "alg:HPR" << std::endl;
-	/*for (auto clCount : clientCount)
+	/*std::cout << "alg:HPR" << std::endl;
+	for (auto clCount : clientCount)
 	{
 		for (auto lfc : leaderFacCount)
 		{
@@ -166,7 +166,8 @@ int main()
 		}
 	}*/
 
-	std::cout << "alg:VND_1_1" << std::endl;
+
+
 	for (const auto& inputFile : testPaths)
 	{
 		for (auto clCount : clientCount)
@@ -177,21 +178,14 @@ int main()
 				{
 					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
 
-					bool timeExpired = false;
-					auto start = timer.now();
-					auto res = solver.VNDUpperProblem(1, 1, instance, timeExpired);
-					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
-					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
-					if (timeExpired)
-						std::cout << res << "" << -deltaTime << std::endl;
-					else
-						std::cout << res << " " << deltaTime << std::endl;
+					auto output = solver.VNDUpperVNDFirstImproveLower(1, 1, instance, timeLimit);
+					std::cout << "alg:VND_1_1 " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+						output.first << " " << output.second.count() / 1000.0f << std::endl;
 				}
 			}
 		}
 	}
 
-	std::cout << "alg:VND_1_2" << std::endl;
 	for (const auto& inputFile : testPaths)
 	{
 		for (auto clCount : clientCount)
@@ -202,21 +196,14 @@ int main()
 				{
 					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
 
-					bool ended = false;
-					auto start = timer.now();
-					auto res = solver.VNDUpperProblem(1, 2, instance, ended);
-					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
-					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
-					if (ended)
-						std::cout << res << " " << -deltaTime << std::endl;
-					else
-						std::cout << res << " " << deltaTime << std::endl;
+					auto output = solver.VNDUpperVNDFirstImproveLower(1, 2, instance, timeLimit);
+					std::cout << "alg:VND_1_2 " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+						output.first << " " << output.second.count() / 1000.0f << std::endl;
 				}
 			}
 		}
 	}
 
-	std::cout << "alg:VND_2_1" << std::endl;
 	for (const auto& inputFile : testPaths)
 	{
 		for (auto clCount : clientCount)
@@ -227,21 +214,15 @@ int main()
 				{
 					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
 
-					bool ended = false;
-					auto start = timer.now();
-					auto res = solver.VNDUpperProblem(2, 1, instance, ended);
-					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
-					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
-					if (ended)
-						std::cout << res << " " << -deltaTime << std::endl;
-					else
-						std::cout << res << " " << deltaTime << std::endl;
+					auto output = solver.VNDUpperVNDFirstImproveLower(2, 1, instance, timeLimit);
+					std::cout << "alg:VND_2_1 " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+						output.first << " " << output.second.count() / 1000.0f << std::endl;
 				}
 			}
 		}
 	}
 
-	std::cout << "alg:VND_EX" << std::endl;
+	/*std::cout << "alg:VND_EX" << std::endl;
 	for (const auto& inputFile : testPaths)
 	{
 		std::cout << "Test_file: " << inputFile << std::endl;
@@ -265,7 +246,7 @@ int main()
 				}
 			}
 		}
-	}
+	}*/
 
 	/*std::cout << "alg:EX" << std::endl;
 	for (const auto& inputFile : testPaths)

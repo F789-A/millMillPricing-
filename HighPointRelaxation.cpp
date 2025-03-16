@@ -5,8 +5,6 @@
 
 #include "ClientProblemSolver.h"
 
-
-
 SCIP_RETCODE HighPointRelaxation::Solve(const Instance& instance)
 {
 	int facilityCount = instance.leaderFacilityCount + instance.followerFacilityCount;

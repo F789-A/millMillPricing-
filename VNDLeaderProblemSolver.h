@@ -19,9 +19,10 @@
 class VNDLeaderProblemSolver
 {
 public:
-	ivector GetFirst(const Instance& instance, bool upper);
+	ivector GetFirst(const Instance& instance);
 
-	int VNDUpperProblem(int FlipCount, int FollowerFlipCount, const Instance& instance, bool& ended);
+	int VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit);
+	std::pair<int, std::chrono::milliseconds> VNDUpperVNDFirstImproveLower(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit);
 	int LSUpperProblemExactLower(const Instance& instance, bool& ended);
 	int ExactUpperProblem(const Instance& instance, bool& ended);
 	int ExactUpperProblem2(const Instance& instance, bool& ended);
@@ -29,5 +30,4 @@ public:
 	ClientProblemSolver clientProblemSolver;
 	FollowerCooperativeExactSolver followerProblemSolver;
 	VNDFollowerProblemSolver vndFollowerProblemSolver;
-	//FollowerCooperativeExactSolverStable
 };

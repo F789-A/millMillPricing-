@@ -77,9 +77,6 @@
     <ClInclude Include="Subset.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExampleGenerator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="LowerBoundMD.h">
       <Filter>Source Files</Filter>
     </ClInclude>

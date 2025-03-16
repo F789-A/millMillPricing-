@@ -1,8 +1,8 @@
 #include "VNDLeaderProblemSolver.h"
 
-ivector VNDLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
+ivector VNDLeaderProblemSolver::GetFirst(const Instance& instance)
 {
-	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
+	ivector result = instance.pUpperBound;
 	for (auto& l : result)
 	{
 		l /= 2;
@@ -10,21 +10,18 @@ ivector VNDLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
 	return result;
 }
 
-int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, bool& timeExpired)
+int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit)
 {
-	timeExpired = false;
-
 	std::chrono::high_resolution_clock timer;
 	auto startTime = timer.now();
 
-	ivector leaderPrices = GetFirst(instance, true);
+	ivector leaderPrices = GetFirst(instance);
 	auto followerSolution = followerProblemSolver.Solve(leaderPrices, instance);
 	ivector followerPrices = std::move(followerSolution.followerPrices);
 	int leaderIncome = followerSolution.leaderIncome;
 
 	int iterationCount = 1;
-	int k = 1;
-	for(; k <= LeaderFlipCount; ++iterationCount)
+	for(int k = 1; k <= LeaderFlipCount; ++iterationCount)
 	{
 		ivector leaderRecordPrices = leaderPrices;
 		int incomeRecord = leaderIncome;
@@ -32,10 +29,9 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 
 		for (FlipIterator flipIterator(leaderPrices, k, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 		{
-			auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime).count() / 1000.0f;
-			if (deltaTime > 3600)
+			auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+			if (deltaTime > TimeLimit)
 			{
-				timeExpired = true;
 				return leaderIncome;
 			}
 
@@ -50,12 +46,24 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 				incomeRecord = tmpIncome;
 				followerPseudoIncome = clientProblemSolver.followerIncome;
 			}
+
+			deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+			if (deltaTime > TimeLimit)
+			{
+				return leaderIncome;
+			}
 		}
 
 		followerSolution = followerProblemSolver.Solve(leaderRecordPrices, instance);
 		const ivector& followerPricesOnRecord = followerSolution.followerPrices;
 		clientProblemSolver.Solve(leaderRecordPrices, followerPricesOnRecord, instance);
 		int leaderIncomeOnRecord = clientProblemSolver.leaderIncome;
+
+		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+		if (deltaTime > TimeLimit)
+		{
+			return leaderIncome;
+		}
 
 		if (leaderIncomeOnRecord > leaderIncome)
 		{
@@ -73,21 +81,90 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 	return leaderIncome;
 }
 
+std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFirstImproveLower(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit)
+{
+	std::chrono::high_resolution_clock timer;
+	auto startTime = timer.now();
+
+	ivector leaderPrices = GetFirst(instance);
+	auto followerSolution = followerProblemSolver.Solve(leaderPrices, instance);
+	ivector followerPrices = std::move(followerSolution.followerPrices);
+	int leaderIncome = followerSolution.leaderIncome;
+
+	int iterationCount = 1;
+	for (int k = 1; k <= LeaderFlipCount; ++iterationCount)
+	{
+		ivector leaderRecordPrices = leaderPrices;
+		int incomeRecord = leaderIncome;
+		int followerPseudoIncome = 0;
+
+		for (FlipIterator flipIterator(leaderPrices, k, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
+		{
+			auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+			if (deltaTime > TimeLimit)
+			{
+				return { leaderIncome, TimeLimit };
+			}
+
+			ivector tmpLeaderPrices = *flipIterator;
+			ivector tmpFollowerPrices = vndFollowerProblemSolver.VNDLowerProblem(followerPrices, tmpLeaderPrices, FollowerFlipCount, instance);
+
+			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
+			int tmpIncome = clientProblemSolver.leaderIncome;
+			if (tmpIncome > incomeRecord)
+			{
+				leaderRecordPrices = std::move(tmpLeaderPrices);
+				incomeRecord = tmpIncome;
+				followerPseudoIncome = clientProblemSolver.followerIncome;
+			}
+
+			deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+			if (deltaTime > TimeLimit)
+			{
+				return { leaderIncome, TimeLimit };
+			}
+		}
+
+		followerSolution = followerProblemSolver.Solve(leaderRecordPrices, instance);
+		const ivector& followerPricesOnRecord = followerSolution.followerPrices;
+		clientProblemSolver.Solve(leaderRecordPrices, followerPricesOnRecord, instance);
+		int leaderIncomeOnRecord = clientProblemSolver.leaderIncome;
+
+		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+		if (deltaTime > TimeLimit)
+		{
+			return { leaderIncome, TimeLimit };
+		}
+
+		if (leaderIncomeOnRecord > leaderIncome)
+		{
+			leaderPrices = leaderRecordPrices;
+			leaderIncome = leaderIncomeOnRecord;
+			followerPrices = followerPricesOnRecord;
+			k = 1;
+		}
+		else
+		{
+			++k;
+		}
+	}
+
+	auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+	return { leaderIncome, deltaTime };
+}
+
 int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, bool& ended)
 {
 	ended = false;
 	std::chrono::high_resolution_clock timer;
 	auto startTime = timer.now();
 
-	ivector leaderPrices = GetFirst(instance, true);
+	ivector leaderPrices = GetFirst(instance);
 	auto followerSolution = followerProblemSolver.Solve(leaderPrices, instance);
 	ivector followerPrices = followerSolution.followerPrices;
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int leaderIncome = clientProblemSolver.leaderIncome;
 	int followerIncome = clientProblemSolver.followerIncome;
-
-	//std::cout << std::setw(3) << 0 << ";"
-		//<< std::setw(4) << leaderIncome << ";" << std::setw(4) << followerIncome << ";" << std::endl;
 
 	int iterationCount = 1;
 	for (; true; ++iterationCount)

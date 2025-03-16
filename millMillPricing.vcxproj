@@ -162,7 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientProblemSolver.h" />
-    <ClInclude Include="ExampleGenerator.h" />
     <ClInclude Include="FollowerCooperativeExactSolver.h" />
     <ClInclude Include="HighPointRelaxation.h" />
     <ClInclude Include="Instance.h" />

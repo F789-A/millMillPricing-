@@ -314,7 +314,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, 
 		std::cout << "--------------------------------------------------" << std::endl;
 	}
 
-	SCIP_CALL(SCIPsetRealParam(scip, "limits/time", 3600))
+	//SCIP_CALL(SCIPsetRealParam(scip, "limits/time", 3600))
 
 	ClientProblemSolver cps;
 	cps.Solve(leaderPrices, output.followerPrices, instance);
