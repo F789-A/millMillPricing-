@@ -2,28 +2,37 @@
 
 #include "Subset.h"
 
-
-ivector VNDFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
-	SubsetIterator& facilityIter, const Instance& instance)
+FlipIterator::FlipIterator(const ivector& startPrice, const int k, const ivector& upperBound)
+	: subsetIterator(startPrice.size(), k), startPrice(startPrice), current(startPrice), upperBounds(upperBound)
 {
-	ivector result = startPrice;
+}
 
-	const std::vector<int>& facilityes = *facilityIter;
-
-	for (int i = 0; i < facilityes.size(); ++i)
+FlipIterator& FlipIterator::operator++()
+{
+	const std::vector<int>& facilities = *subsetIterator;
+	
+	for (int i = 0; i < facilities.size(); ++i)
 	{
-		result[facilityes[i]] = priceIter[i];
-	}
+		int j = facilities[i];
 
-	for (int i = facilityIter.Cardinality() - 1; i >= 0; --i)
-	{
-		++priceIter[i];
-		if (priceIter[i] > instance.qUpperBound[facilityes[i]])
+		++current[j];
+		if (current[j] > upperBounds[j])
 		{
-			priceIter[i] = 0;
-			if (i == 0)
+			current[j] = 0;
+			if (i == facilities.size() - 1)
 			{
-				++facilityIter;
+				for (auto k : facilities)
+				{
+					current[k] = startPrice[k];
+				}
+				++subsetIterator;
+				if (!subsetIterator.End())
+				{
+					for (auto k : facilities)
+					{
+						current[k] = 0;
+					}
+				}
 			}
 		}
 		else
@@ -32,7 +41,17 @@ ivector VNDFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::ve
 		}
 	}
 
-	return result;
+	return *this;
+}
+
+const std::vector<int>& FlipIterator::operator*() const
+{
+	return current;
+}
+
+bool FlipIterator::End() const
+{
+	return subsetIterator.End();
 }
 
 ivector VNDFollowerProblemSolver::VNDLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance)
@@ -48,11 +67,9 @@ ivector VNDFollowerProblemSolver::VNDLowerProblem(const ivector& first, const iv
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
 
-		SubsetIterator facilityIterator(instance.followerFacilityCount, k);
-		std::vector<int> facilityPrices(k, 0);
-		while (!facilityIterator.End())
+		for (FlipIterator flipIterator(followerPrices, k, instance.qUpperBound); !flipIterator.End(); ++flipIterator)
 		{
-			ivector tmpFollowerPrices = GetFromFlip(followerPrices, facilityPrices, facilityIterator, instance);
+			ivector tmpFollowerPrices = *flipIterator;
 
 			clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);
 			int tmpIncome = clientProblemSolver.followerIncome;
@@ -85,11 +102,9 @@ ivector VNDFollowerProblemSolver::SearchLowerProblem(const ivector& leaderPrices
 	int leaderIncome = 0;
 	int followerIncome = 0;
 
-	SubsetIterator facilityIterator(instance.followerFacilityCount, instance.followerFacilityCount);
-	std::vector<int> facilityPrices(instance.followerFacilityCount, 0);
-	while (!facilityIterator.End())
+	for (FlipIterator flipIterator(followerPrices, instance.followerFacilityCount, instance.qUpperBound); !flipIterator.End(); ++flipIterator)
 	{
-		ivector tmpFollowerPrices = GetFromFlip(followerPrices, facilityPrices, facilityIterator, instance);
+		ivector tmpFollowerPrices = *flipIterator;
 
 		clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);
 		int tmpFollowerIncome = clientProblemSolver.followerIncome;

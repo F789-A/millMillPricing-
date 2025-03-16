@@ -16,10 +16,26 @@
 
 #include "Subset.h"
 
+class FlipIterator
+{
+public:
+	FlipIterator(const ivector& startPrice, const int k, const ivector& upperBound);
+
+	FlipIterator& operator++();
+	const std::vector<int>& operator*() const;
+
+	bool End() const;
+
+private:
+	const ivector& startPrice;
+	const ivector& upperBounds;
+	std::vector<int> current;
+	SubsetIterator subsetIterator;
+};
+
 class VNDFollowerProblemSolver
 {
 public:
-	ivector GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, SubsetIterator& facilityIter, const Instance& instance);
 	ivector VNDLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance);
 	ivector SearchLowerProblem(const ivector& leaderPrices, const Instance& instance);
 

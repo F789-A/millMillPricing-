@@ -36,8 +36,3 @@ bool SubsetIterator::End() const
 {
 	return data[0] > setSize - cardinality;
 }
-
-int SubsetIterator::Cardinality() const
-{
-	return cardinality;
-}

@@ -10,38 +10,6 @@ ivector VNDLeaderProblemSolver::GetFirst(const Instance& instance, bool upper)
 	return result;
 }
 
-ivector VNDLeaderProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, 
-	SubsetIterator& facilityIter, const Instance& instance)
-{
-	ivector result = startPrice;
-
-	const std::vector<int>& facilityes = *facilityIter;
-
-	for (int i = 0; i < facilityes.size(); ++i)
-	{
-		result[facilityes[i]] = priceIter[i];
-	}
-
-	for (int i = facilityIter.Cardinality() - 1; i >= 0; --i)
-	{
-		++priceIter[i];
-		if (priceIter[i] > instance.pUpperBound[facilityes[i]])
-		{
-			priceIter[i] = 0;
-			if (i == 0)
-			{
-				++facilityIter;
-			}
-		}
-		else
-		{
-			break;
-		}
-	}
-
-	return result;
-}
-
 int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, bool& timeExpired)
 {
 	timeExpired = false;
@@ -62,9 +30,7 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 		int incomeRecord = leaderIncome;
 		int followerPseudoIncome = 0;
 
-		SubsetIterator facilityIterator(instance.leaderFacilityCount, k);
-		std::vector<int> facilityPrices(k, 0);
-		while (!facilityIterator.End())
+		for (FlipIterator flipIterator(leaderPrices, k, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 		{
 			auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime).count() / 1000.0f;
 			if (deltaTime > 3600)
@@ -73,7 +39,7 @@ int VNDLeaderProblemSolver::VNDUpperProblem(int LeaderFlipCount, int FollowerFli
 				return leaderIncome;
 			}
 
-			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
+			ivector tmpLeaderPrices = *flipIterator;
 			ivector tmpFollowerPrices = vndFollowerProblemSolver.VNDLowerProblem(followerPrices, tmpLeaderPrices, FollowerFlipCount, instance);
 
 			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
@@ -136,11 +102,9 @@ int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, b
 		ivector leaderRecordPrices = leaderPrices;
 		int leaderIncomeOnRecord = leaderIncome;
 
-		SubsetIterator facilityIterator(instance.leaderFacilityCount, 1);
-		std::vector<int> facilityPrices(1, 0);
-		while (!facilityIterator.End())
+		for (FlipIterator flipIterator(leaderPrices, 1, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 		{
-			ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
+			ivector tmpLeaderPrices = *flipIterator;
 
 			followerSolution = followerProblemSolver.Solve(tmpLeaderPrices, instance);
 			const ivector& tmpFollowerPrices = followerSolution.followerPrices;
@@ -173,11 +137,9 @@ int VNDLeaderProblemSolver::ExactUpperProblem(const Instance& instance, bool& en
 	FollowerCooperativeExactOutput followerSolution;
 	int leaderIncome = 0;
 
-	SubsetIterator facilityIterator(instance.leaderFacilityCount, instance.leaderFacilityCount);
-	std::vector<int> facilityPrices(instance.leaderFacilityCount, 0);
-	while (!facilityIterator.End())
+	for (FlipIterator flipIterator(leaderPrices, instance.leaderFacilityCount, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 	{
-		ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
+		ivector tmpLeaderPrices = *flipIterator;
 
 		followerSolution = followerProblemSolver.Solve(tmpLeaderPrices, instance);
 		clientProblemSolver.Solve(tmpLeaderPrices, followerSolution.followerPrices, instance);
@@ -195,11 +157,9 @@ int VNDLeaderProblemSolver::ExactUpperProblem2(const Instance& instance, bool& e
 	ivector leaderPrices(instance.leaderFacilityCount, 0);
 	int leaderIncome = 0;
 
-	SubsetIterator facilityIterator(instance.leaderFacilityCount, instance.leaderFacilityCount);
-	std::vector<int> facilityPrices(instance.leaderFacilityCount, 0);
-	while (!facilityIterator.End())
+	for (FlipIterator flipIterator(leaderPrices, instance.leaderFacilityCount, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 	{
-		ivector tmpLeaderPrices = GetFromFlip(leaderPrices, facilityPrices, facilityIterator, instance);
+		ivector tmpLeaderPrices = *flipIterator;
 
 		auto followerPrices = vndFollowerProblemSolver.SearchLowerProblem(tmpLeaderPrices, instance);
 		clientProblemSolver.Solve(tmpLeaderPrices, followerPrices, instance);
