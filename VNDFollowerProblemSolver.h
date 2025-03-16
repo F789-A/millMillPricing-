@@ -19,10 +19,9 @@
 class VNDFollowerProblemSolver
 {
 public:
-	ivector GetFirst(const Instance& instance, bool upper);
-	ivector GetRandomFromFlip(const ivector& startPrice, const Instance& instance);
 	ivector GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter, SubsetIterator& facilityIter, const Instance& instance);
 	ivector VNDLowerProblem(const ivector& first, const ivector& leaderPrices, int FlipCount, const Instance& instance);
+	ivector SearchLowerProblem(const ivector& leaderPrices, const Instance& instance);
 
 	ClientProblemSolver clientProblemSolver;
 };

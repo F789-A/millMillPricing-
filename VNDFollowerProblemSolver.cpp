@@ -2,32 +2,6 @@
 
 #include "Subset.h"
 
-ivector VNDFollowerProblemSolver::GetFirst(const Instance& instance, bool upper)
-{
-	ivector result = upper ? instance.pUpperBound : instance.qUpperBound;
-	for (auto& l : result)
-	{
-		l /= 2;
-	}
-	return result;
-}
-
-ivector VNDFollowerProblemSolver::GetRandomFromFlip(const ivector& startPrice, const Instance& instance)
-{
-	static std::seed_seq seed_w({ 123123 });
-	static auto random_generator = std::mt19937(seed_w);
-	std::uniform_int_distribution<> distrib1(0, static_cast<int>(startPrice.size()) - 1);
-
-	int facility = distrib1(random_generator);
-
-	int pBoundMin = 0;
-	int pBoundMax = instance.qUpperBound[facility];
-
-	std::uniform_int_distribution<> distrib2(pBoundMin, pBoundMax);
-	ivector result = startPrice;
-	result[facility] = distrib2(random_generator);
-	return result;
-}
 
 ivector VNDFollowerProblemSolver::GetFromFlip(const ivector& startPrice, std::vector<int>& priceIter,
 	SubsetIterator& facilityIter, const Instance& instance)
@@ -101,5 +75,30 @@ ivector VNDFollowerProblemSolver::VNDLowerProblem(const ivector& first, const iv
 		}
 	}
 
+	return followerPrices;
+}
+
+ivector VNDFollowerProblemSolver::SearchLowerProblem(const ivector& leaderPrices, const Instance& instance)
+{
+	ivector followerPrices(instance.followerFacilityCount, 0);
+
+	int leaderIncome = 0;
+	int followerIncome = 0;
+
+	SubsetIterator facilityIterator(instance.followerFacilityCount, instance.followerFacilityCount);
+	std::vector<int> facilityPrices(instance.followerFacilityCount, 0);
+	while (!facilityIterator.End())
+	{
+		ivector tmpFollowerPrices = GetFromFlip(followerPrices, facilityPrices, facilityIterator, instance);
+
+		clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);
+		int tmpFollowerIncome = clientProblemSolver.followerIncome;
+		int tmpLeaderIncome = clientProblemSolver.followerIncome;
+		if (tmpFollowerIncome > followerIncome || (followerIncome == tmpFollowerIncome && tmpLeaderIncome > leaderIncome))
+		{
+			followerPrices = std::move(tmpFollowerPrices);
+			followerIncome = tmpFollowerIncome;
+		}
+	}
 	return followerPrices;
 }

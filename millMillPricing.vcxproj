@@ -152,6 +152,9 @@
     <ClCompile Include="HighPointRelaxation.cpp" />
     <ClCompile Include="Instance.cpp" />
     <ClCompile Include="FollowerExactSolver.cpp" />
+    <ClCompile Include="LowerBoundMD.cpp" />
+    <ClCompile Include="LowerBoundUM.cpp" />
+    <ClCompile Include="UpperBoundDM.cpp" />
     <ClCompile Include="VNDFollowerProblemSolver.cpp" />
     <ClCompile Include="VNDLeaderProblemSolver.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -159,10 +162,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ClientProblemSolver.h" />
+    <ClInclude Include="ExampleGenerator.h" />
     <ClInclude Include="FollowerCooperativeExactSolver.h" />
     <ClInclude Include="HighPointRelaxation.h" />
     <ClInclude Include="Instance.h" />
     <ClInclude Include="FollowerExactSolver.h" />
+    <ClInclude Include="LowerBoundMD.h" />
+    <ClInclude Include="LowerBoundUM.h" />
+    <ClInclude Include="UpperBoundDM.h" />
     <ClInclude Include="VNDLeaderProblemSolver.h" />
     <ClInclude Include="VNDFollowerProblemSolver.h" />
     <ClInclude Include="Subset.h" />

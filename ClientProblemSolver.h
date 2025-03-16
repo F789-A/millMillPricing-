@@ -9,5 +9,9 @@ public:
 	int leaderIncome;
 	int followerIncome;
 
+	bool needAll = false;
+	std::vector<int> xOut;
+	std::vector<int> xOutB;
+
 	bool debug = false;
 };

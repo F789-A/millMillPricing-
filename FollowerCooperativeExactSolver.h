@@ -16,10 +16,10 @@ struct FollowerCooperativeExactOutput
 class FollowerCooperativeExactSolver
 {
 public:
-	FollowerCooperativeExactOutput Solve(const ivector& leaderPrices, const Instance& instance);
+	FollowerCooperativeExactOutput Solve(const ivector& leaderPrices, const Instance& instance, bool forceLeaderUpperBound = false);
 
 private:
-	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output);
+	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output, bool forceLeaderUpperBound = false);
 
 	const bool debug = false;
 

@@ -12,10 +12,14 @@ struct FollowerSolution
 class FollowerExactSolver
 {
 public:
+	bool needAll = false;
+
 	FollowerSolution Solve(const ivector& leaderPrices, const Instance& instance);
 
-	bool debug = false;
+	static constexpr bool debug = false;
 
+	std::vector<int> zOut;
+	std::vector<int> xOut;
 private:
 	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerSolution& output);
 };

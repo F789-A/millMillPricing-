@@ -7,6 +7,9 @@
 
 #include "VNDLeaderProblemSolver.h"
 #include "HighPointRelaxation.h"
+#include "LowerBoundMD.h"
+#include "LowerBoundUM.h"
+#include "ExampleGenerator.h"
 
 Instance ReadInstance(const std::string& path, int leaderFacilityCount, int followerCount, int clientCount)
 {
@@ -77,59 +80,218 @@ int main()
 		"examples/FLPr_100_100_08.txt",
 		"examples/FLPr_100_100_09.txt",
 		"examples/FLPr_100_100_10.txt",
+		/*"examplesNew/FLPr_100_100_0.txt",
+		"examplesNew/FLPr_100_100_1.txt",
+		"examplesNew/FLPr_100_100_2.txt",
+		"examplesNew/FLPr_100_100_3.txt",
+		"examplesNew/FLPr_100_100_4.txt",
+		"examplesNew/FLPr_100_100_5.txt",
+		"examplesNew/FLPr_100_100_6.txt",
+		"examplesNew/FLPr_100_100_7.txt",
+		"examplesNew/FLPr_100_100_8.txt",
+		"examplesNew/FLPr_100_100_9.txt",
+		*/
 	};
-
-	//std::string path = "C:/Workflow/Cpp/millMillPricing/examples";
-	//for (const auto& entry : std::filesystem::directory_iterator(path))
-	//{
-		//testPaths.push_back(entry.path().string());
-	//}
-	std::vector<int> leaderFacCount{2, 5, 10, 20};
-	std::vector<int> followerFacCount{ 2, 5, 10};
-	std::vector<int> clientCount{ 30 };
+	std::vector<int> leaderFacCount{ 50 };
+	std::vector<int> followerFacCount{ 2, 5};
+	std::vector<int> clientCount{ 60 };
 	HighPointRelaxation relax;
+	LowerBoundMD lowerBoundMD;
+	LowerBoundUM lowerBoundUM;
 	VNDLeaderProblemSolver solver;
 	std::chrono::high_resolution_clock timer;
 
+	std::cout << "alg:HPR" << std::endl;
+	/*for (auto clCount : clientCount)
+	{
+		for (auto lfc : leaderFacCount)
+		{
+			for (const auto& inputFile : testPaths)
+			{
+				Instance instance = ReadInstance(inputFile, lfc, 0, clCount);
+				auto start = timer.now();
+				relax.Solve(instance);
+				auto res = relax.income;
+				auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+				for (auto ffc : followerFacCount)
+				{
+					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
+					std::cout << res << " " << deltaTime << " ";
+					std::cout << std::endl;
+				}
+			}
+		}
+	}*/
+
+	/*std::cout << "alg:UM" << std::endl;
+	for (auto clCount : clientCount)
+	{
+		for (auto lfc : leaderFacCount)
+		{
+			for (auto ffc : followerFacCount)
+			{
+				std::cout << clCount << " " << lfc << " " << ffc << std::endl;
+				for (const auto& inputFile : testPaths)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+					auto start = timer.now();
+					auto res = lowerBoundUM.Solve(instance);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << res << " " << deltaTime << " ";
+				}
+				std::cout << std::endl;
+			}
+		}
+	}*/
+
+	/*std::cout << "alg:MD" << std::endl;
+	for (auto clCount : clientCount)
+	{
+		for (auto lfc : leaderFacCount)
+		{
+			for (auto ffc : followerFacCount)
+			{
+				std::cout << clCount << " " << lfc << " " << ffc << std::endl;
+				for (const auto& inputFile : testPaths)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+					auto start = timer.now();
+					lowerBoundMD.Solve(instance);
+					auto res = lowerBoundMD.income;
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << res << " " << deltaTime << " ";
+				}
+				std::cout << std::endl;
+			}
+		}
+	}*/
+
+	std::cout << "alg:VND_1_1" << std::endl;
 	for (const auto& inputFile : testPaths)
 	{
-		std::cout << "Test file: " << inputFile << std::endl;
-
 		for (auto clCount : clientCount)
 		{
 			for (auto lfc : leaderFacCount)
 			{
 				for (auto ffc : followerFacCount)
 				{
-					std::cout << clCount << " " << lfc << " " << ffc << std::endl;
 					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
 
+					bool timeExpired = false;
 					auto start = timer.now();
-					relax.Solve(instance);
-					auto res = relax.income;
-					auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
-					std::cout << "HighPointRelaxation: " << res << " " << deltaTime << std::endl;
-
-					bool ended = false;
-					start = timer.now();
-					res = solver.VNDUpperProblem(1, 1, instance, ended);
-					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
-					std::cout << "vnd_1_1: " << res  << " " << deltaTime << " " << ended << std::endl;
-
-					start = timer.now();
-					res = solver.VNDUpperProblem(1, 2, instance, ended);
-					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
-					std::cout << "vnd_1_2: " << res << " " << deltaTime << " " << ended << std::endl;
-
-					start = timer.now();
-					res = solver.VNDUpperProblem(2, 1, instance, ended);
-					deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(timer.now() - start).count() / 1000000.0f;
-					std::cout << "vnd_2_1: " << res << " " << deltaTime << " " << ended << std::endl;
+					auto res = solver.VNDUpperProblem(1, 1, instance, timeExpired);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
+					if (timeExpired)
+						std::cout << res << "" << -deltaTime << std::endl;
+					else
+						std::cout << res << " " << deltaTime << std::endl;
 				}
 			}
-
 		}
 	}
 
+	std::cout << "alg:VND_1_2" << std::endl;
+	for (const auto& inputFile : testPaths)
+	{
+		for (auto clCount : clientCount)
+		{
+			for (auto lfc : leaderFacCount)
+			{
+				for (auto ffc : followerFacCount)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+
+					bool ended = false;
+					auto start = timer.now();
+					auto res = solver.VNDUpperProblem(1, 2, instance, ended);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
+					if (ended)
+						std::cout << res << " " << -deltaTime << std::endl;
+					else
+						std::cout << res << " " << deltaTime << std::endl;
+				}
+			}
+		}
+	}
+
+	std::cout << "alg:VND_2_1" << std::endl;
+	for (const auto& inputFile : testPaths)
+	{
+		for (auto clCount : clientCount)
+		{
+			for (auto lfc : leaderFacCount)
+			{
+				for (auto ffc : followerFacCount)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+
+					bool ended = false;
+					auto start = timer.now();
+					auto res = solver.VNDUpperProblem(2, 1, instance, ended);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << clCount << " " << lfc << " " << ffc << " " << inputFile << " ";
+					if (ended)
+						std::cout << res << " " << -deltaTime << std::endl;
+					else
+						std::cout << res << " " << deltaTime << std::endl;
+				}
+			}
+		}
+	}
+
+	std::cout << "alg:VND_EX" << std::endl;
+	for (const auto& inputFile : testPaths)
+	{
+		std::cout << "Test_file: " << inputFile << std::endl;
+		for (auto clCount : clientCount)
+		{
+			for (auto lfc : leaderFacCount)
+			{
+				for (auto ffc : followerFacCount)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+
+					bool ended = false;
+					auto start = timer.now();
+					auto res = solver.LSUpperProblemExactLower(instance, ended);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << clCount << " " << lfc << " " << ffc << std::endl;
+					if (ended)
+						std::cout << res << " " << -deltaTime << std::endl;
+					else
+						std::cout << res << " " << deltaTime << std::endl;
+				}
+			}
+		}
+	}
+
+	/*std::cout << "alg:EX" << std::endl;
+	for (const auto& inputFile : testPaths)
+	{
+		std::cout << "Test_file: " << inputFile << std::endl;
+		for (auto clCount : clientCount)
+		{
+			for (auto lfc : leaderFacCount)
+			{
+				for (auto ffc : followerFacCount)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+
+					bool ended = false;
+					auto start = timer.now();
+					auto res = solver.ExactUpperProblem(instance, ended);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << clCount << " " << lfc << " " << ffc << std::endl;
+					if (ended)
+						std::cout << res << " " << -deltaTime << std::endl;
+					else
+						std::cout << res << " " << deltaTime << std::endl;
+				}
+			}
+		}
+	}
+	*/
 	return 0;
 }

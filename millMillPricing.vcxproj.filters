@@ -42,6 +42,15 @@
     <ClCompile Include="Subset.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="LowerBoundMD.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LowerBoundUM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UpperBoundDM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FollowerExactSolver.h">
@@ -66,6 +75,18 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Subset.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExampleGenerator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LowerBoundMD.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LowerBoundUM.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UpperBoundDM.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

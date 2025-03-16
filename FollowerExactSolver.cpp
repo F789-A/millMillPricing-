@@ -144,12 +144,35 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 	SCIP_CALL(SCIPsolve(scip));
 	SCIP_SOL* sol = SCIPgetBestSol(scip);
 
+	assert(sol != nullptr);
+
 	//puck data
 	output.followerIncome = std::lround(SCIPgetSolOrigObj(scip, sol));
 	output.followerPrices.resize(instance.followerFacilityCount);
 	for (int i = 0; i < instance.followerFacilityCount; ++i)
 	{
-		output.followerPrices[i] = std::lround(SCIPgetSolVal(scip, sol, p_i[i]));
+		output.followerPrices[i] = std::lroundl(SCIPgetSolVal(scip, sol, p_i[i]));
+	}
+	if (needAll)
+	{
+		zOut.clear();
+		zOut.reserve(instance.followerFacilityCount* instance.clientsCount);
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			for (int j = 0; j < instance.clientsCount; ++j)
+			{
+				zOut.push_back(std::lroundl(SCIPgetSolVal(scip, sol, z_ij[i][j])));
+			}
+		}
+		xOut.clear();
+		xOut.reserve(instance.followerFacilityCount* instance.clientsCount);
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			for (int j = 0; j < instance.clientsCount; ++j)
+			{
+				xOut.push_back(std::lroundl(SCIPgetSolVal(scip, sol, x_ij[i][j])));
+			}
+		}
 	}
 
 	if (debug)

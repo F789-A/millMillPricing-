@@ -4,6 +4,11 @@
 
 void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& followerPrice, const Instance& instance)
 {
+	if (needAll)
+	{
+		xOut.resize(instance.clientsCount);
+		xOutB.resize(instance.clientsCount);
+	}
 	leaderIncome = 0;
 	followerIncome = 0;
 	for (int j = 0; j < instance.clientsCount; ++j)
@@ -41,6 +46,12 @@ void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& follo
 			{
 				std::cout << "l" << leaderBestFacility << " ";
 			}
+			if (needAll)
+			{
+				xOut[j] = leaderBestFacility;
+				xOutB[j] = 1;
+			}
+				
 		}
 		else if (minLeaderCost > minFollowerCost && followerBestFacility >= 0)
 		{
@@ -49,9 +60,19 @@ void ClientProblemSolver::Solve(const ivector& leaderPrice, const ivector& follo
 			{
 				std::cout << "f" << followerBestFacility << " ";
 			}
+			if (needAll)
+			{
+				xOut[j] = followerBestFacility;
+				xOutB[j] = -1;
+			}
 		}
 		else
 		{
+			if (needAll)
+			{
+				xOut[j] = -1;
+				xOutB[j] = 0;
+			}
 			if (debug)
 			{
 				std::cout << "-- ";
