@@ -10,7 +10,6 @@ public:
 	const std::vector<int>& operator*() const;
 
 	bool End() const;
-	int Cardinality() const;
 
 private:
 	int cardinality;
