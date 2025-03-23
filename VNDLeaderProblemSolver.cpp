@@ -107,7 +107,7 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 			}
 
 			ivector tmpLeaderPrices = *flipIterator;
-			ivector tmpFollowerPrices = vndFollowerProblemSolver.VNDLowerProblem(followerPrices, tmpLeaderPrices, FollowerFlipCount, instance);
+			ivector tmpFollowerPrices = vndFollowerProblemSolver.VNDLowerProblemFirstImprove(followerPrices, tmpLeaderPrices, FollowerFlipCount, instance);
 
 			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			int tmpIncome = clientProblemSolver.leaderIncome;
