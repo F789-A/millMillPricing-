@@ -70,30 +70,31 @@ int main()
 {
 	std::vector<std::string> testPaths
 	{
-"examples/FLPr_100_100_01.txt",
-"examples/FLPr_100_100_02.txt",
-"examples/FLPr_100_100_03.txt",
-"examples/FLPr_100_100_04.txt",
-"examples/FLPr_100_100_05.txt",
-"examples/FLPr_100_100_06.txt",
-"examples/FLPr_100_100_07.txt",
-"examples/FLPr_100_100_08.txt",
-"examples/FLPr_100_100_09.txt",
-"examples/FLPr_100_100_10.txt",
-/*"examplesNew/FLPr_100_100_0.txt",
-"examplesNew/FLPr_100_100_1.txt",
-"examplesNew/FLPr_100_100_2.txt",
-"examplesNew/FLPr_100_100_3.txt",
-"examplesNew/FLPr_100_100_4.txt",
-"examplesNew/FLPr_100_100_5.txt",
-"examplesNew/FLPr_100_100_6.txt",
-"examplesNew/FLPr_100_100_7.txt",
-"examplesNew/FLPr_100_100_8.txt",
-"examplesNew/FLPr_100_100_9.txt",
-*/
+		"examples/FLPr_100_100_01.txt",
+		//"examples/FLPr_100_100_02.txt",
+		//"examples/FLPr_100_100_03.txt",
+		//"examples/FLPr_100_100_04.txt",
+		//"examples/FLPr_100_100_05.txt",
+		//"examples/FLPr_100_100_06.txt",
+		//"examples/FLPr_100_100_07.txt",
+		//"examples/FLPr_100_100_08.txt",
+		//"examples/FLPr_100_100_09.txt",
+		//"examples/FLPr_100_100_10.txt",
+		/*
+		"examplesNew/FLPr_100_100_0.txt",
+		"examplesNew/FLPr_100_100_1.txt",
+		"examplesNew/FLPr_100_100_2.txt",
+		"examplesNew/FLPr_100_100_3.txt",
+		"examplesNew/FLPr_100_100_4.txt",
+		"examplesNew/FLPr_100_100_5.txt",
+		"examplesNew/FLPr_100_100_6.txt",
+		"examplesNew/FLPr_100_100_7.txt",
+		"examplesNew/FLPr_100_100_8.txt",
+		"examplesNew/FLPr_100_100_9.txt",
+		*/
 	};
-	std::vector<int> leaderFacCount{ 2, 5, 10, 20 };
-	std::vector<int> followerFacCount{ 2, 5, 10 };
+	std::vector<int> leaderFacCount{ 2};
+	std::vector<int> followerFacCount{ 10 };
 	std::vector<int> clientCount{ 30 };
 	HighPointRelaxation relax;
 	LowerBoundMD lowerBoundMD;
@@ -101,6 +102,31 @@ int main()
 	VNDLeaderProblemSolver solver;
 	std::chrono::high_resolution_clock timer;
 	std::chrono::milliseconds timeLimit(3600 * 1000);
+
+	for (auto clCount : clientCount)
+	{
+		for (auto lfc : leaderFacCount)
+		{
+			for (auto ffc : followerFacCount)
+			{
+				for (const auto& inputFile : testPaths)
+				{
+					Instance instance = ReadInstance(inputFile, lfc, ffc, clCount);
+
+					auto output = solver.VNDUpperVNDFirstImproveLower(1, 1, instance, timeLimit);
+					std::cout << "alg:VND_1_1 " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+						output.first << " " << output.second.count() / 1000.0f << std::endl;
+
+					auto start = timer.now();
+					auto res = lowerBoundUM.Solve(instance);
+					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					std::cout << res << " " << deltaTime << " ";
+					std::cout << "alg:UM " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+						res << " " << deltaTime << std::endl;
+				}
+			}
+		}
+	}
 
 	/*std::cout << "alg:HPR" << std::endl;
 	for (auto clCount : clientCount)
@@ -167,7 +193,7 @@ int main()
 		}
 	}*/
 
-	for (const auto& inputFile : testPaths)
+	/*for (const auto& inputFile : testPaths)
 	{
 		for (auto clCount : clientCount)
 		{
