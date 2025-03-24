@@ -23,7 +23,7 @@ public:
 
 	int VNDUpperProblem(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit);
 	std::pair<int, std::chrono::milliseconds> VNDUpperVNDFirstImproveLower(int LeaderFlipCount, int FollowerFlipCount, const Instance& instance, const std::chrono::milliseconds TimeLimit);
-	int LSUpperProblemExactLower(const Instance& instance, bool& ended);
+	int LSUpperProblemExactLower(const Instance& instance, const std::chrono::milliseconds TimeLimit);
 	int ExactUpperProblem(const Instance& instance, bool& ended);
 	int ExactUpperProblem2(const Instance& instance, bool& ended);
 

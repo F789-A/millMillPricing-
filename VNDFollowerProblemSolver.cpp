@@ -67,7 +67,8 @@ ivector VNDFollowerProblemSolver::VNDLowerProblem(const ivector& first, const iv
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int maxIncome = clientProblemSolver.followerIncome;
 
-	for (int k = 1; k <= FlipCount;)
+	int iterationCount = 1;
+	for (int k = 1; k <= FlipCount; ++iterationCount)
 	{
 		ivector followerRecordPrices = followerPrices;
 		int incomeRecord = maxIncome;
@@ -105,11 +106,14 @@ ivector VNDFollowerProblemSolver::VNDLowerProblemFirstImprove(const ivector& fir
 	ivector followerPrices = first;
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int followerIncome = clientProblemSolver.followerIncome;
-
-	for (int k = 1; k <= FlipCount;)
 	{
+	int iterationCount = 1;
+	for (int k = 1; k <= FlipCount; ++iterationCount)
+	{
+		bool wasImproved = false;
 		for (FlipIterator flipIterator(followerPrices, k, instance.qUpperBound); !flipIterator.End(); ++flipIterator)
 		{
+
 			ivector tmpFollowerPrices = *flipIterator;
 
 			clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);
@@ -120,12 +124,13 @@ ivector VNDFollowerProblemSolver::VNDLowerProblemFirstImprove(const ivector& fir
 				followerPrices = std::move(tmpFollowerPrices);
 				followerIncome = tmpIncome;
 				k = 1;
+				wasImproved = true;
 				break;
 			}
-			else
-			{
-				++k;
-			}
+		}
+		if (!wasImproved)
+		{
+			++k;
 		}
 	}
 

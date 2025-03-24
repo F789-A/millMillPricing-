@@ -153,7 +153,7 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 	return { leaderIncome, deltaTime };
 }
 
-int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, bool& ended)
+int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, const std::chrono::milliseconds TimeLimit)
 {
 	ended = false;
 	std::chrono::high_resolution_clock timer;
@@ -169,11 +169,11 @@ int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, b
 	int iterationCount = 1;
 	for (; true; ++iterationCount)
 	{
-		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime).count() / 1000.0f;
-		if (deltaTime > 3600)
+		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+		if (deltaTime > TimeLimit)
 		{
 			ended = true;
-			return leaderIncome;
+			return { leaderIncome };
 		}
 
 		ivector leaderRecordPrices = leaderPrices;
@@ -181,6 +181,12 @@ int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, b
 
 		for (FlipIterator flipIterator(leaderPrices, 1, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 		{
+			deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
+			if (deltaTime > TimeLimit)
+			{
+				return { leaderIncome };
+			}
+
 			ivector tmpLeaderPrices = *flipIterator;
 
 			followerSolution = followerProblemSolver.Solve(tmpLeaderPrices, instance);
@@ -205,6 +211,7 @@ int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, b
 		}
 	}
 
+	auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
 	return leaderIncome;
 }
 
