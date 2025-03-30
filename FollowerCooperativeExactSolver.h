@@ -5,6 +5,7 @@
 
 #include "FollowerExactSolver.h"
 #include "ClientProblemSolver.h"
+#include <optional>
 
 struct FollowerCooperativeExactOutput
 {
@@ -16,10 +17,12 @@ struct FollowerCooperativeExactOutput
 class FollowerCooperativeExactSolver
 {
 public:
-	FollowerCooperativeExactOutput Solve(const ivector& leaderPrices, const Instance& instance, bool forceLeaderUpperBound = false);
+	FollowerCooperativeExactOutput Solve(const ivector& leaderPrices, const Instance& instance, bool forceLeaderUpperBound = false, 
+		const std::optional<ivector>& hint = std::nullopt);
 
 private:
-	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output, bool forceLeaderUpperBound = false);
+	SCIP_RETCODE Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output, bool forceLeaderUpperBound = false,
+		const std::optional<ivector>& hint = std::nullopt);
 
 	const bool debug = false;
 

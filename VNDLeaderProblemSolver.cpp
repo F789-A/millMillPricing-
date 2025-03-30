@@ -91,12 +91,34 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 	ivector followerPrices = std::move(followerSolution.followerPrices);
 	int leaderIncome = followerSolution.leaderIncome;
 
+	int stackSize = 5;
+
 	int iterationCount = 1;
 	for (int k = 1; k <= LeaderFlipCount; ++iterationCount)
 	{
-		ivector leaderRecordPrices = leaderPrices;
-		int incomeRecord = leaderIncome;
-		int followerPseudoIncome = 0;
+		std::vector<std::tuple<int, ivector, ivector>> stack;
+		auto insertInStackIfNeed = [&stack, stackSize](int pseudoLeaderIncome, const ivector& leaderNewPrice, const ivector& followerPrice)
+		{
+			if (stack.size() < stackSize)
+			{
+				stack.push_back(std::make_tuple(pseudoLeaderIncome, leaderNewPrice, followerPrice));
+			}
+			else
+			{
+				int minEl = 0;
+				for (int i = 1; i < stack.size(); ++i)
+				{
+					if (std::get<0>(stack[minEl]) > std::get<0>(stack[i]))
+					{
+						minEl = i;
+					}
+				}
+				if (std::get<0>(stack[minEl]) < pseudoLeaderIncome)
+				{
+					stack[minEl] = std::make_tuple(pseudoLeaderIncome, leaderNewPrice, followerPrice);
+				}
+			}
+		};
 
 		for (FlipIterator flipIterator(leaderPrices, k, instance.pUpperBound); !flipIterator.End(); ++flipIterator)
 		{
@@ -111,12 +133,7 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 
 			clientProblemSolver.Solve(tmpLeaderPrices, tmpFollowerPrices, instance);
 			int tmpIncome = clientProblemSolver.leaderIncome;
-			if (tmpIncome > incomeRecord)
-			{
-				leaderRecordPrices = std::move(tmpLeaderPrices);
-				incomeRecord = tmpIncome;
-				followerPseudoIncome = clientProblemSolver.followerIncome;
-			}
+			insertInStackIfNeed(tmpIncome, tmpLeaderPrices, tmpFollowerPrices);
 
 			deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
 			if (deltaTime > TimeLimit)
@@ -125,28 +142,43 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 			}
 		}
 
-		followerSolution = followerProblemSolver.Solve(leaderRecordPrices, instance);
-		const ivector& followerPricesOnRecord = followerSolution.followerPrices;
-		clientProblemSolver.Solve(leaderRecordPrices, followerPricesOnRecord, instance);
-		int leaderIncomeOnRecord = clientProblemSolver.leaderIncome;
-
-		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
-		if (deltaTime > TimeLimit)
+		std::sort(stack.begin(), stack.end(), [](const std::tuple<float, ivector, ivector>& a,
+			const std::tuple<float, ivector, ivector>& b)
+			{
+				return std::get<0>(a) > std::get<0>(b); 
+			}
+		);
+		bool improved = false;
+		for (auto& [leaderPseudoIncome, leaderNewPrices, followerHint] : stack)
 		{
-			return { leaderIncome, TimeLimit };
+			followerSolution = followerProblemSolver.Solve(leaderNewPrices, instance, false, followerHint);
+			const ivector& followerPricesOnRecord = followerSolution.followerPrices;
+			clientProblemSolver.Solve(leaderNewPrices, followerPricesOnRecord, instance);
+			int leaderIncomeOnRecord = clientProblemSolver.leaderIncome;
+
+			if (leaderIncomeOnRecord > leaderIncome)
+			{
+				leaderPrices = leaderNewPrices;
+				leaderIncome = leaderIncomeOnRecord;
+				followerPrices = followerPricesOnRecord;
+				improved = true;
+				break;
+			}
+			if (leaderIncomeOnRecord == leaderPseudoIncome)
+			{
+				break;
+			}
 		}
 
-		if (leaderIncomeOnRecord > leaderIncome)
+		if (improved)
 		{
-			leaderPrices = leaderRecordPrices;
-			leaderIncome = leaderIncomeOnRecord;
-			followerPrices = followerPricesOnRecord;
 			k = 1;
 		}
 		else
 		{
 			++k;
 		}
+
 	}
 
 	auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
@@ -155,7 +187,6 @@ std::pair<int, std::chrono::milliseconds> VNDLeaderProblemSolver::VNDUpperVNDFir
 
 int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, const std::chrono::milliseconds TimeLimit)
 {
-	ended = false;
 	std::chrono::high_resolution_clock timer;
 	auto startTime = timer.now();
 
@@ -172,7 +203,6 @@ int VNDLeaderProblemSolver::LSUpperProblemExactLower(const Instance& instance, c
 		auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - startTime);
 		if (deltaTime > TimeLimit)
 		{
-			ended = true;
 			return { leaderIncome };
 		}
 

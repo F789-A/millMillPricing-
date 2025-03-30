@@ -5,14 +5,16 @@
 
 #include "ClientProblemSolver.h"
 
-FollowerSolution FollowerExactSolver::Solve(const ivector& leaderPrices, const Instance& instance)
+FollowerSolution FollowerExactSolver::Solve(const ivector& leaderPrices, const Instance& instance,
+	const std::optional<ivector>& hint)
 {
 	FollowerSolution output;
-	Solve(leaderPrices, instance, output);
+	Solve(leaderPrices, instance, output, hint);
 	return output;
 }
 
-SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, FollowerSolution& output)
+SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, FollowerSolution& output,
+	const std::optional<ivector>& hint)
 {
 	SCIP* scip = nullptr;
 	SCIP_CALL(SCIPcreate(&scip));
@@ -139,6 +141,38 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 			SCIP_CALL(SCIPaddCoefLinear(scip, cnstr, x_ij[i][j], 1.0));
 		}
 		SCIP_CALL(SCIPaddCons(scip, cnstr));
+	}
+
+	if (hint.has_value())
+	{
+		SCIP_SOL* initSol = nullptr;
+		SCIP_CALL(SCIPcreateSol(scip, &initSol, nullptr));
+		ClientProblemSolver cps2;
+		cps2.needAll = true;
+		cps2.Solve(leaderPrices, *hint, instance);
+		for (int i = 0; i < instance.followerFacilityCount; ++i)
+		{
+			for (int j = 0; j < instance.clientsCount; ++j)
+			{
+				if (cps2.xOutB[j] == -1 && cps2.xOut[j] == i)
+				{
+					SCIP_CALL(SCIPsetSolVal(scip, initSol, z_ij[i][j], (*hint)[i]));
+					SCIP_CALL(SCIPsetSolVal(scip, initSol, x_ij[i][j], 1));
+				}
+				else
+				{
+					SCIP_CALL(SCIPsetSolVal(scip, initSol, z_ij[i][j], 0.0));
+					SCIP_CALL(SCIPsetSolVal(scip, initSol, x_ij[i][j], 0));
+				}
+			}
+		}
+		for (int k = 0; k < p_i.size(); ++k)
+		{
+			SCIP_CALL(SCIPsetSolVal(scip, initSol, p_i[k], (*hint)[k]));
+		}
+		SCIP_Bool stored = false;
+		SCIP_CALL(SCIPaddSolFree(scip, &initSol, &stored));
+		assert(stored);
 	}
 
 	SCIP_CALL(SCIPsolve(scip));

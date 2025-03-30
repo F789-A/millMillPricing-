@@ -106,7 +106,7 @@ ivector VNDFollowerProblemSolver::VNDLowerProblemFirstImprove(const ivector& fir
 	ivector followerPrices = first;
 	clientProblemSolver.Solve(leaderPrices, followerPrices, instance);
 	int followerIncome = clientProblemSolver.followerIncome;
-	{
+
 	int iterationCount = 1;
 	for (int k = 1; k <= FlipCount; ++iterationCount)
 	{

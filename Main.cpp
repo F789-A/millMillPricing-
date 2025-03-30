@@ -93,8 +93,8 @@ int main()
 		"examplesNew/FLPr_100_100_9.txt",
 		*/
 	};
-	std::vector<int> leaderFacCount{ 2};
-	std::vector<int> followerFacCount{ 10 };
+	std::vector<int> leaderFacCount{ 2, 5, 10, 20};
+	std::vector<int> followerFacCount{ 2, 5, 10 };
 	std::vector<int> clientCount{ 30 };
 	HighPointRelaxation relax;
 	LowerBoundMD lowerBoundMD;
@@ -117,12 +117,12 @@ int main()
 					std::cout << "alg:VND_1_1 " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
 						output.first << " " << output.second.count() / 1000.0f << std::endl;
 
-					auto start = timer.now();
-					auto res = lowerBoundUM.Solve(instance);
-					auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
-					std::cout << res << " " << deltaTime << " ";
-					std::cout << "alg:UM " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
-						res << " " << deltaTime << std::endl;
+					//auto start = timer.now();
+					//auto res = lowerBoundUM.Solve(instance);
+					//auto deltaTime = std::chrono::duration_cast<std::chrono::milliseconds>(timer.now() - start).count() / 1000.0f;
+					//std::cout << res << " " << deltaTime << " ";
+					//std::cout << "alg:UM " << clCount << " " << lfc << " " << ffc << " " << inputFile << " " <<
+					//	res << " " << deltaTime << std::endl;
 				}
 			}
 		}

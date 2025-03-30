@@ -6,14 +6,16 @@
 #include <iostream>
 #include <algorithm>
 
-FollowerCooperativeExactOutput FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, bool forceLeaderUpperBound)
+FollowerCooperativeExactOutput FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, bool forceLeaderUpperBound,
+	const std::optional<ivector>& hint)
 {
 	FollowerCooperativeExactOutput output;
-	Solve(leaderPrices, instance, output, forceLeaderUpperBound);
+	Solve(leaderPrices, instance, output, forceLeaderUpperBound, hint);
 	return output;
 }
 
-SCIP_RETCODE FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output, bool forceLeaderUpperBound)
+SCIP_RETCODE FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, const Instance& instance, FollowerCooperativeExactOutput& output, bool forceLeaderUpperBound,
+	const std::optional<ivector>& hint)
 {
 	auto toIdx = [&instance](int i, int j)
 	{
@@ -49,7 +51,7 @@ SCIP_RETCODE FollowerCooperativeExactSolver::Solve(const ivector& leaderPrices, 
 	}
 
 	followerExactSolver.needAll = false;
-	auto rowSol = followerExactSolver.Solve(leaderPrices, instance);
+	auto rowSol = followerExactSolver.Solve(leaderPrices, instance, hint);
 	int targetIncome = rowSol.followerIncome;
 
 	SCIP* scip = nullptr;
