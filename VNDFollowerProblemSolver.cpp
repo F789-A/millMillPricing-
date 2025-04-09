@@ -113,7 +113,6 @@ ivector VNDFollowerProblemSolver::VNDLowerProblemFirstImprove(const ivector& fir
 		bool wasImproved = false;
 		for (FlipIterator flipIterator(followerPrices, k, instance.qUpperBound); !flipIterator.End(); ++flipIterator)
 		{
-
 			ivector tmpFollowerPrices = *flipIterator;
 
 			clientProblemSolver.Solve(leaderPrices, tmpFollowerPrices, instance);

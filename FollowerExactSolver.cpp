@@ -57,7 +57,6 @@ SCIP_RETCODE FollowerExactSolver::Solve(const ivector& leaderPrices, const Insta
 		{
 			if (instance.budgets[j] - (instance.costsLeader[i][j] + leaderPrices[i]) >= 0)
 			{
-				assert(instance.costsLeader[i][j] + leaderPrices[i] > 0);
 				reformulatedBudgets[j] = std::min(reformulatedBudgets[j], instance.costsLeader[i][j] + leaderPrices[i] - 1);
 			}
 		}
